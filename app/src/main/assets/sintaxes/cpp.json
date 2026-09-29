@@ -1,0 +1,16 @@
+{
+  "nome": "C++",
+  "extensoes": ["cpp", "cxx", "cc", "c++", "hpp", "hxx", "hh", "inl", "ipp"],
+  "regras": [
+    { "nome": "Preprocessador", "regex": "(?m)^\\s*#\\s*\\w+", "cor": "#C586C0" },
+    { "nome": "String", "regex": "\"(?:[^\"\\\\\\n]|\\\\.)*\"", "cor": "#CE9178" },
+    { "nome": "Char", "regex": "'(?:[^'\\\\\\n]|\\\\.)*'", "cor": "#CE9178" },
+    { "nome": "Keyword", "regex": "\\b(class|struct|union|enum|namespace|using|template|typename|public|private|protected|virtual|override|final|static|const|constexpr|volatile|mutable|extern|inline|register|thread_local|auto|decltype|return|if|else|for|while|do|switch|case|default|break|continue|goto|try|catch|throw|new|delete|sizeof|alignof|noexcept|operator|this|nullptr|true|false|concept|requires|co_await|co_yield|co_return)\\b", "cor": "#569CD6" },
+    { "nome": "Tipo", "regex": "\\b(void|bool|char|wchar_t|char8_t|char16_t|char32_t|short|int|long|float|double|signed|unsigned|size_t|ssize_t|ptrdiff_t|int8_t|int16_t|int32_t|int64_t|uint8_t|uint16_t|uint32_t|uint64_t|intptr_t|uintptr_t|string|vector|map|set|pair|tuple|shared_ptr|unique_ptr|weak_ptr|atomic|thread|mutex)\\b", "cor": "#4EC9B0" },
+    { "nome": "Função", "regex": "\\b[A-Za-z_][A-Za-z0-9_]*(?=\\s*\\()", "cor": "#DCDCAA" },
+    { "nome": "Constante", "regex": "\\b(NULL|nullopt|std|EOF|INT_MAX|INT_MIN|UINT_MAX)\\b", "cor": "#4FC1FF" },
+    { "nome": "Número", "regex": "\\b(0[xX][0-9a-fA-F]+|0[bB][01]+|\\d+\\.\\d+([eE][+-]?\\d+)?|\\d+[uUlLfF]*)\\b", "cor": "#B5CEA8" },
+    { "nome": "Comentário Linha", "regex": "(?m)//.*$", "cor": "#6A9955" },
+    { "nome": "Comentário Bloco", "regex": "/\\*[\\s\\S]*?\\*/", "cor": "#6A9955" }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "nome": "JSON",
+  "extensoes": ["json"],
+  "regras": [
+    { "nome": "String", "regex": "\"(?:[^\"\\\\\\n]|\\\\.)*\"", "cor": "#CE9178" },
+    { "nome": "Palavra-chave", "regex": "\\b(true|false|null)\\b", "cor": "#569CD6" },
+    { "nome": "Número", "regex": "\\b-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b", "cor": "#B5CEA8" },
+    { "nome": "Chave", "regex": "\"[^\"\\n]*\"(?=\\s*:)", "cor": "#9CDCFE" },
+    { "nome": "Pontuação", "regex": "[{}\\[\\],:]", "cor": "#D4D4D4" }
+  ]
+}

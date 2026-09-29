@@ -1,0 +1,16 @@
+{
+  "nome": "Markdown",
+  "extensoes": ["md", "markdown", "mdown"],
+  "regras": [
+    { "nome": "Bloco de Código", "regex": "```[\\s\\S]*?```", "cor": "#CE9178" },
+    { "nome": "Código Inline", "regex": "`[^`\\n]+`", "cor": "#CE9178" },
+    { "nome": "Imagem", "regex": "!\\[[^\\]\\n]*\\]\\([^\\)\\n]*\\)", "cor": "#4EC9B0" },
+    { "nome": "Link", "regex": "\\[[^\\]\\n]*\\]\\([^\\)\\n]*\\)", "cor": "#4EC9B0" },
+    { "nome": "Bold", "regex": "\\*\\*[^*\\n]+\\*\\*|__[^_\\n]+__", "cor": "#DCDCAA" },
+    { "nome": "Itálico", "regex": "(?<![*_\\w])\\*[^*\\n]+\\*(?![*_])|(?<![*_\\w])_[^_\\n]+_(?![*_])", "cor": "#DCDCAA" },
+    { "nome": "Heading", "regex": "(?m)^#{1,6}.*$", "cor": "#569CD6" },
+    { "nome": "Lista", "regex": "(?m)^\\s*(?:[-*+]|\\d+\\.)\\s", "cor": "#C586C0" },
+    { "nome": "Blockquote", "regex": "(?m)^>.*$", "cor": "#6A9955" },
+    { "nome": "Regra Horizontal", "regex": "(?m)^\\s*(?:[-*_]\\s*){3,}$", "cor": "#6B7280" }
+  ]
+}

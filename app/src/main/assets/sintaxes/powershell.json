@@ -1,0 +1,14 @@
+{
+  "nome": "PowerShell",
+  "extensoes": ["ps1", "psm1", "psd1"],
+  "regras": [
+    { "nome": "Variável", "regex": "\\$[A-Za-z_][A-Za-z0-9_]*|\\$\\{[^}\\n]+\\}", "cor": "#9CDCFE" },
+    { "nome": "String Dupla", "regex": "\"[^\"\\n]*\"", "cor": "#CE9178" },
+    { "nome": "String Simples", "regex": "'[^'\\n]*'", "cor": "#CE9178" },
+    { "nome": "Keyword", "regex": "(?i)\\b(if|else|elseif|switch|foreach|for|while|do|until|function|filter|param|return|break|continue|throw|try|catch|finally|in|begin|process|end|class|enum|using|new|static|hidden|readonly|exit)\\b", "cor": "#569CD6" },
+    { "nome": "Cmdlet", "regex": "\\b[A-Z][a-z]+-[A-Z][a-zA-Z]+\\b", "cor": "#DCDCAA" },
+    { "nome": "Número", "regex": "\\b\\d+(\\.\\d+)?\\b", "cor": "#B5CEA8" },
+    { "nome": "Comentário Bloco", "regex": "<#[\\s\\S]*?#>", "cor": "#6A9955" },
+    { "nome": "Comentário", "regex": "(?m)#.*$", "cor": "#6A9955" }
+  ]
+}

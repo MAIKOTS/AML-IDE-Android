@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="42dp"
+    android:layout_height="42dp"
+    android:layout_marginStart="3dp"
+    android:layout_marginEnd="3dp"
+    android:background="@drawable/bg_editor_simbolo"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:text="{"
+    android:textColor="@color/texto_primario"
+    android:textSize="14sp"
+    android:typeface="monospace" />

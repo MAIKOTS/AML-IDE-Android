@@ -1,0 +1,12 @@
+{
+  "nome": "Properties",
+  "extensoes": ["properties", "env", "ini", "conf", "cfg"],
+  "regras": [
+    { "nome": "Valor", "regex": "(?m)(?<=[=:]).*$", "cor": "#CE9178" },
+    { "nome": "Chave", "regex": "(?m)^[^\\s#!=:][^=:!]*", "cor": "#9CDCFE" },
+    { "nome": "Separador", "regex": "[=:]", "cor": "#C586C0" },
+    { "nome": "Placeholder", "regex": "\\$\\{[^}\\n]*\\}", "cor": "#DCDCAA" },
+    { "nome": "Número", "regex": "\\b-?\\d+(\\.\\d+)?\\b", "cor": "#B5CEA8" },
+    { "nome": "Comentário", "regex": "(?m)^\\s*[#!].*$", "cor": "#6A9955" }
+  ]
+}

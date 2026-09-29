@@ -1,0 +1,14 @@
+{
+  "nome": "Shell",
+  "extensoes": ["sh", "bash", "zsh", "fish", "ksh"],
+  "regras": [
+    { "nome": "Variável", "regex": "\\$\\{?[A-Za-z_][A-Za-z0-9_]*\\}?|\\$\\([^)\\n]*\\)", "cor": "#9CDCFE" },
+    { "nome": "String Dupla", "regex": "\"[^\"\\n]*\"", "cor": "#CE9178" },
+    { "nome": "String Simples", "regex": "'[^'\\n]*'", "cor": "#CE9178" },
+    { "nome": "Keyword", "regex": "\\b(if|then|else|elif|fi|for|while|until|do|done|case|esac|function|return|in|break|continue|local|export|readonly|declare|typeset|unset|source|alias|eval|exec|exit|shift|trap|wait|set|let|read)\\b", "cor": "#569CD6" },
+    { "nome": "Comando", "regex": "\\b(echo|printf|cd|pwd|ls|mkdir|rmdir|rm|cp|mv|cat|head|tail|grep|egrep|fgrep|sed|awk|sort|uniq|wc|find|xargs|chmod|chown|touch|which|type|env|date|sleep|kill|ps|df|du|tar|gzip|curl|wget|git|make|cmake|docker|npm|node|python|pip|java|gradle|apt|yum|brew|sudo)\\b", "cor": "#DCDCAA" },
+    { "nome": "Número", "regex": "\\b\\d+\\b", "cor": "#B5CEA8" },
+    { "nome": "Shebang", "regex": "(?m)^#!.*$", "cor": "#C586C0" },
+    { "nome": "Comentário", "regex": "(?m)#(?![!]).*$", "cor": "#6A9955" }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "nome": "Texto",
+  "extensoes": ["txt", "text", "log", "license", "licence", "readme", "changelog", "notice", "authors", "contributors", "copying", "install", "makefile", "make"],
+  "regras": [
+    { "nome": "URL", "regex": "https?://[^\\s]+", "cor": "#4EC9B0" },
+    { "nome": "Email", "regex": "[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}", "cor": "#4EC9B0" },
+    { "nome": "String", "regex": "\"[^\"\\n]*\"|'[^'\\n]*'", "cor": "#CE9178" },
+    { "nome": "Número", "regex": "\\b\\d+(\\.\\d+)?\\b", "cor": "#B5CEA8" },
+    { "nome": "TODO", "regex": "\\b(TODO|FIXME|XXX|NOTE|HACK|WARNING|BUG)\\b", "cor": "#FFC107" },
+    { "nome": "Título", "regex": "(?m)^[A-Z][A-Z0-9 \\-_,.;:!?()/]{4,}$", "cor": "#569CD6" }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "nome": "XML",
+  "extensoes": ["xml", "xsd", "xsl", "xslt", "svg", "plist"],
+  "regras": [
+    { "nome": "Declaração", "regex": "<\\?[\\s\\S]*?\\?>", "cor": "#C586C0" },
+    { "nome": "CDATA", "regex": "<!\\[CDATA\\[[\\s\\S]*?\\]\\]>", "cor": "#CE9178" },
+    { "nome": "Tag", "regex": "</?[A-Za-z_][A-Za-z0-9_:.\\-]*", "cor": "#569CD6" },
+    { "nome": "Atributo", "regex": "\\b[A-Za-z_][A-Za-z0-9_:.\\-]*(?=\\s*=)", "cor": "#9CDCFE" },
+    { "nome": "Valor", "regex": "\"[^\"\\n]*\"|'[^'\\n]*'", "cor": "#CE9178" },
+    { "nome": "Comentário", "regex": "<!--[\\s\\S]*?-->", "cor": "#6A9955" }
+  ]
+}

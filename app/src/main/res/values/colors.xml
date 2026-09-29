@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ==================== BASE ==================== -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="ic_launcher_background">#121212</color>
+
+    <!-- ==================== FUNDOS ==================== -->
+    <color name="bg_base">#09090B</color>
+    <color name="bg_superficie">#0F0F11</color>
+    <color name="bg_painel">#18181B</color>
+    <color name="bg_card">#0F0F12</color>
+
+    <!-- ==================== BORDAS ==================== -->
+    <color name="borda_sutil">#26262B</color>
+    <color name="borda_divisor">#1F1F23</color>
+    <color name="borda_circulo_icone">#2A2A2E</color>
+
+    <!-- ==================== TEXTO ==================== -->
+    <color name="texto_primario">#F4F4F5</color>
+    <color name="texto_secundario">#A1A1AA</color>
+    <color name="texto_terciario">#3F3F46</color>
+
+    <!-- ==================== DESTAQUE ==================== -->
+    <color name="verde_destaque">#00E676</color>
+    <color name="verde_destaque_escuro">#1F4D3A</color>
+
+    <!-- ==================== RIPPLE ==================== -->
+    <color name="ripple_claro">#1AFFFFFF</color>
+    <color name="ripple_verde">#2600E676</color>
+
+</resources>

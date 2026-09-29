@@ -1,0 +1,13 @@
+{
+  "nome": "YAML",
+  "extensoes": ["yml", "yaml"],
+  "regras": [
+    { "nome": "String", "regex": "\"[^\"\\n]*\"|'[^'\\n]*'", "cor": "#CE9178" },
+    { "nome": "Chave", "regex": "(?m)^\\s*[A-Za-z_][A-Za-z0-9_.\\-]*(?=\\s*:)", "cor": "#9CDCFE" },
+    { "nome": "Booleano", "regex": "\\b(true|false|null|yes|no|on|off)\\b", "cor": "#569CD6" },
+    { "nome": "Número", "regex": "\\b-?\\d+(\\.\\d+)?\\b", "cor": "#B5CEA8" },
+    { "nome": "Âncora", "regex": "[&*][A-Za-z_][A-Za-z0-9_]*", "cor": "#C586C0" },
+    { "nome": "Marcador", "regex": "(?m)^\\s*-\\s", "cor": "#C586C0" },
+    { "nome": "Comentário", "regex": "(?m)#.*$", "cor": "#6A9955" }
+  ]
+}

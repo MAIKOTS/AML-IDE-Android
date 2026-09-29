@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container_principal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <!-- Área onde as telas ativas (Inicio, Seletor, Editor, etc.) são injetadas -->
+    <FrameLayout
+        android:id="@+id/area_conteudo_tela"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Camada de overlay escuro (sombra) ao abrir o menu -->
+    <View
+        android:id="@+id/sombra_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone" />
+
+    <!-- Menu Lateral Deslizante -->
+    <LinearLayout
+        android:id="@+id/menu_lateral"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="#1E1E1E"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="24dp"
+            android:paddingTop="16dp"
+            android:text="AML IDE - Menu"
+            android:textColor="#00E676"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_menu_inicio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="start|center_vertical"
+            android:text="Tela Inicial"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn_menu_projetos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="start|center_vertical"
+            android:text="Selecionar Projeto"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn_menu_editor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="start|center_vertical"
+            android:text="Editor C/C++"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+</FrameLayout>

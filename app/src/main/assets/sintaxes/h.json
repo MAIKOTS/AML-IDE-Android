@@ -1,0 +1,16 @@
+{
+  "nome": "Header",
+  "extensoes": ["h"],
+  "regras": [
+    { "nome": "Preprocessador", "regex": "(?m)^\\s*#\\s*\\w+", "cor": "#C586C0" },
+    { "nome": "Include", "regex": "<[A-Za-z0-9_./+\\-]+>", "cor": "#CE9178" },
+    { "nome": "String", "regex": "\"(?:[^\"\\\\\\n]|\\\\.)*\"", "cor": "#CE9178" },
+    { "nome": "Keyword", "regex": "\\b(class|struct|union|enum|namespace|using|template|typename|public|private|protected|virtual|override|final|static|const|constexpr|volatile|extern|inline|typedef|return|if|else|for|while|do|switch|case|default|break|continue|goto|new|delete|sizeof|auto|this|nullptr|true|false|void|bool|char|short|int|long|float|double|signed|unsigned)\\b", "cor": "#569CD6" },
+    { "nome": "Tipo", "regex": "\\b(size_t|ssize_t|ptrdiff_t|int8_t|int16_t|int32_t|int64_t|uint8_t|uint16_t|uint32_t|uint64_t|intptr_t|uintptr_t|string|vector|map|shared_ptr|unique_ptr)\\b", "cor": "#4EC9B0" },
+    { "nome": "Função", "regex": "\\b[A-Za-z_][A-Za-z0-9_]*(?=\\s*\\()", "cor": "#DCDCAA" },
+    { "nome": "Macro Def", "regex": "\\b[A-Z_][A-Z0-9_]{2,}\\b", "cor": "#4FC1FF" },
+    { "nome": "Número", "regex": "\\b(0[xX][0-9a-fA-F]+|\\d+\\.\\d+|\\d+[uUlLfF]*)\\b", "cor": "#B5CEA8" },
+    { "nome": "Comentário Linha", "regex": "(?m)//.*$", "cor": "#6A9955" },
+    { "nome": "Comentário Bloco", "regex": "/\\*[\\s\\S]*?\\*/", "cor": "#6A9955" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "nome": "C",
+  "extensoes": ["c"],
+  "regras": [
+    { "nome": "Preprocessador", "regex": "(?m)^\\s*#\\s*\\w+", "cor": "#C586C0" },
+    { "nome": "String", "regex": "\"(?:[^\"\\\\\\n]|\\\\.)*\"", "cor": "#CE9178" },
+    { "nome": "Char", "regex": "'(?:[^'\\\\\\n]|\\\\.)*'", "cor": "#CE9178" },
+    { "nome": "Keyword", "regex": "\\b(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|_Bool|_Complex|_Atomic|_Static_assert|_Noreturn|_Thread_local|_Alignas|_Alignof|_Generic)\\b", "cor": "#569CD6" },
+    { "nome": "Tipo", "regex": "\\b(size_t|ssize_t|ptrdiff_t|int8_t|int16_t|int32_t|int64_t|uint8_t|uint16_t|uint32_t|uint64_t|intptr_t|uintptr_t|FILE|bool|wchar_t|va_list|off_t|pid_t|time_t|clock_t)\\b", "cor": "#4EC9B0" },
+    { "nome": "Função", "regex": "\\b[A-Za-z_][A-Za-z0-9_]*(?=\\s*\\()", "cor": "#DCDCAA" },
+    { "nome": "Constante", "regex": "\\b(NULL|EOF|INT_MAX|INT_MIN|UINT_MAX|SIZE_MAX|EXIT_SUCCESS|EXIT_FAILURE)\\b", "cor": "#4FC1FF" },
+    { "nome": "Número", "regex": "\\b(0[xX][0-9a-fA-F]+|0[bB][01]+|\\d+\\.\\d+([eE][+-]?\\d+)?|\\d+[uUlLfF]*)\\b", "cor": "#B5CEA8" },
+    { "nome": "Comentário Linha", "regex": "(?m)//.*$", "cor": "#6A9955" },
+    { "nome": "Comentário Bloco", "regex": "/\\*[\\s\\S]*?\\*/", "cor": "#6A9955" }
+  ]
+}

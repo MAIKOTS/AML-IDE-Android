@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#09090B"
+    android:orientation="vertical">
+
+    <!-- ========== Toolbar ========== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#0F0F11"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/configBtnVoltar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:drawableStart="@drawable/ic_seta_voltar"
+            android:drawablePadding="6dp"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:text="Voltar"
+            android:textColor="#F4F4F5"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/configTitulo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="middle"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="Configurações"
+            android:textColor="#A1A1AA"
+            android:textSize="12sp"
+            android:typeface="monospace" />
+
+        <TextView
+            android:id="@+id/configBtnSalvar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:drawableStart="@drawable/ic_guardar"
+            android:drawablePadding="6dp"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:text="Salvar"
+            android:textColor="#00E676"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#27272A" />
+
+    <!-- ========== Scroll de campos ========== -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="32dp">
+
+            <!-- ========== INFORMAÇÕES ========== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="10dp"
+                android:letterSpacing="0.15"
+                android:text="INFORMAÇÕES"
+                android:textColor="#00E676"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/LabelConfig" android:text="Nome" />
+            <EditText
+                android:id="@+id/configNome"
+                style="@style/CampoConfig"
+                android:hint="MeuMod"
+                android:inputType="text" />
+
+            <TextView style="@style/LabelConfig" android:text="Versão" />
+            <EditText
+                android:id="@+id/configVersao"
+                style="@style/CampoConfig"
+                android:hint="1.0.0"
+                android:inputType="text" />
+
+            <TextView style="@style/LabelConfig" android:text="Autor" />
+            <EditText
+                android:id="@+id/configAutor"
+                style="@style/CampoConfig"
+                android:hint="Seu nome"
+                android:inputType="text" />
+
+            <TextView style="@style/LabelConfig" android:text="Descrição" />
+            <EditText
+                android:id="@+id/configDescricao"
+                style="@style/CampoConfig"
+                android:hint="Uma breve descrição do mod"
+                android:inputType="textMultiLine"
+                android:minLines="2"
+                android:gravity="top" />
+
+            <!-- ========== ALVO ========== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="10dp"
+                android:letterSpacing="0.15"
+                android:text="ALVO"
+                android:textColor="#00E676"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/LabelConfig" android:text="ABIs (arquiteturas)" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:id="@+id/configAbiArm64"
+                    style="@style/ChipAbi"
+                    android:text="arm64-v8a" />
+
+                <TextView
+                    android:id="@+id/configAbiArm32"
+                    style="@style/ChipAbi"
+                    android:layout_marginStart="8dp"
+                    android:text="armeabi-v7a" />
+            </LinearLayout>
+
+            <TextView style="@style/LabelConfig" android:text="API mínima" />
+            <EditText
+                android:id="@+id/configApi"
+                style="@style/CampoConfig"
+                android:hint="21"
+                android:inputType="number" />
+
+            <!-- ========== SAÍDA ========== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="10dp"
+                android:letterSpacing="0.15"
+                android:text="SAÍDA"
+                android:textColor="#00E676"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/LabelConfig" android:text="Nome da biblioteca (sem .so)" />
+            <EditText
+                android:id="@+id/configLibNome"
+                style="@style/CampoConfig"
+                android:hint="libmeumod"
+                android:inputType="text" />
+
+            <!-- ========== COMPILADOR ========== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="10dp"
+                android:letterSpacing="0.15"
+                android:text="COMPILADOR"
+                android:textColor="#00E676"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/LabelConfig" android:text="Padrão C++" />
+            <TextView
+                android:id="@+id/configStd"
+                style="@style/CampoConfig"
+                android:text="c++17" />
+
+            <TextView style="@style/LabelConfig" android:text="Otimização" />
+            <TextView
+                android:id="@+id/configOtimizacao"
+                style="@style/CampoConfig"
+                android:text="O2" />
+
+            <!-- ========== AVANÇADO ========== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="10dp"
+                android:letterSpacing="0.15"
+                android:text="AVANÇADO"
+                android:textColor="#A1A1AA"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/LabelConfig" android:text="Flags extras (separadas por vírgula)" />
+            <EditText
+                android:id="@+id/configFlags"
+                style="@style/CampoConfig"
+                android:hint="-DDEBUG,-DVERBOSE"
+                android:inputType="text" />
+
+            <TextView style="@style/LabelConfig" android:text="Fontes (vazio = todos em src/)" />
+            <EditText
+                android:id="@+id/configFontes"
+                style="@style/CampoConfig"
+                android:hint="src/main.cpp,src/helper.cpp"
+                android:inputType="text" />
+
+            <TextView style="@style/LabelConfig" android:text="Includes" />
+            <EditText
+                android:id="@+id/configIncludes"
+                style="@style/CampoConfig"
+                android:hint="include"
+                android:inputType="text" />
+
+            <TextView style="@style/LabelConfig" android:text="Libs (separadas por vírgula)" />
+            <EditText
+                android:id="@+id/configLibs"
+                style="@style/CampoConfig"
+                android:hint="-llog,-landroid"
+                android:inputType="text" />
+
+            <TextView style="@style/LabelConfig" android:text="Dependências Git (URL@branch)" />
+            <EditText
+                android:id="@+id/configDependencias"
+                style="@style/CampoConfig"
+                android:hint="https://github.com/user/lib.git@v1.0"
+                android:inputType="textMultiLine"
+                android:minLines="2"
+                android:gravity="top" />
+
+            <!-- Aviso -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_card"
+                android:padding="12dp"
+                android:text="ℹ  Este arquivo fica oculto na estrutura do projeto. Ele é salvo como Projeto.properties no disco."
+                android:textColor="#A1A1AA"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

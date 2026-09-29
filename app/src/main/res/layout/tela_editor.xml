@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_base"
+    android:orientation="vertical">
+
+    <!-- ========== Barra de Ações Superior ========== -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/bg_superficie"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/editorBtnVoltar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:drawableStart="@drawable/ic_seta_voltar"
+        android:drawablePadding="6dp"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:text="Voltar"
+        android:textColor="@color/texto_primario"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/editorStatusAba"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="middle"
+        android:gravity="center"
+        android:singleLine="true"
+        android:text="Nenhum arquivo aberto"
+        android:textColor="@color/texto_secundario"
+        android:textSize="12sp"
+        android:typeface="monospace" />
+
+    <TextView
+        android:id="@+id/editorBtnSalvar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:drawableStart="@drawable/ic_guardar"
+        android:drawablePadding="6dp"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:text="Salvar"
+        android:textColor="#29B6F6"
+        android:textSize="13sp" />
+
+    <!-- Botão de Configs (oculto até ter projeto aberto) -->
+<TextView
+    android:id="@+id/editorBtnConfigs"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:drawableStart="@drawable/ic_config"
+    android:drawablePadding="4dp"
+    android:gravity="center_vertical"
+    android:padding="10dp"
+    android:text="Configs"
+    android:textColor="#A1A1AA"
+    android:textSize="13sp" />
+
+<TextView
+    android:id="@+id/editorBtnCompilar"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:drawableStart="@drawable/ic_compilar"
+    android:drawablePadding="6dp"
+    android:gravity="center_vertical"
+    android:padding="10dp"
+    android:text="Compilar"
+    android:textColor="@color/verde_destaque"
+    android:textSize="13sp" />
+</LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/borda_sutil" />
+
+    <!-- ========== Barra de Abas ========== -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_painel"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/editorConteinerAbas"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+    </HorizontalScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/borda_sutil" />
+
+<!-- ========== Área do Editor ========== -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:background="@drawable/bg_editor_area"
+    android:orientation="horizontal">
+
+    <!-- Gutter FIXO à esquerda (fora do scroll) -->
+    <ui.componentes.GutterView
+        android:id="@+id/editorGutter"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <!-- Editor que rola 2D -->
+    <ui.componentes.ScrollView2D
+        android:id="@+id/editorScroll2D"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+        <ui.componentes.EditorComLinhas
+            android:id="@+id/editorCampoCodigo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:gravity="top|start"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:minWidth="2000dp"
+            android:typeface="monospace" />
+    </ui.componentes.ScrollView2D>
+</LinearLayout>
+
+    <!-- ========== Barra de Símbolos Rápidos ========== -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_superficie"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/editorConteinerSimbolos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+    </HorizontalScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/borda_sutil" />
+
+    <!-- ========== Console (colapsável) ========== -->
+<LinearLayout
+    android:id="@+id/editorConsoleContainer"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:background="@color/bg_base"
+    android:orientation="vertical">
+
+    <!-- Cabeçalho clicável (toggle) -->
+    <LinearLayout
+        android:id="@+id/editorConsoleHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <!-- Drag handle -->
+        <View
+            android:layout_width="26dp"
+            android:layout_height="3dp"
+            android:layout_marginEnd="10dp"
+            android:background="#3F3F46" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:letterSpacing="0.15"
+            android:text="CONSOLE"
+            android:textColor="#A1A1AA"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/editorConsoleToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="▲"
+            android:textColor="#A1A1AA"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/borda_sutil" />
+
+    <ScrollView
+        android:id="@+id/editorConsoleScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/editorConsole"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_editor_console"
+            android:padding="10dp"
+            android:text="Console da IDE pronto.\n"
+            android:textColor="#00E676"
+            android:textSize="11sp"
+            android:typeface="monospace" />
+    </ScrollView>
+</LinearLayout>
+
+</LinearLayout>
