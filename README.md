@@ -10,3 +10,4 @@ IDE Android para desenvolvimento em C/C++ com compilador Clang embutido.
 
 ## Como compilar
 ...
+
