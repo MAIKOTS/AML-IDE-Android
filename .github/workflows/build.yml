@@ -25,12 +25,12 @@ jobs:
 
     - name: Verificar se as libs nativas estão presentes
       run: |
-        echo "=== Tamanho das libs em jnilibs ==="
-        ls -lh app/src/main/jnilibs/arm64-v8a/
+        echo "=== Tamanho das libs em jniLibs ==="
+        ls -lh app/src/main/jniLibs/arm64-v8a/
         echo "=== Tipo dos arquivos ==="
-        file app/src/main/jnilibs/arm64-v8a/libclang.so
+        file app/src/main/jniLibs/arm64-v8a/libclang.so
         echo "=== Verificação de tamanho mínimo ==="
-        SIZE=$(stat -c%s app/src/main/jnilibs/arm64-v8a/libclang.so)
+        SIZE=$(stat -c%s app/src/main/jniLibs/arm64-v8a/libclang.so)
         if [ "$SIZE" -lt 1000000 ]; then
           echo "ERRO: libclang.so tem apenas $SIZE bytes — LFS não baixou!"
           exit 1
