@@ -1,4 +1,7 @@
-# Gradle
+# Binários são gerenciados pelo Git LFS, não ignorar
+# *.so
+# *.a
+# *.o# Gradle
 .gradle/
 build/
 */build/
