@@ -34,31 +34,26 @@ jobs:
         fi
         echo "OK: libclang.so tem $SIZE bytes"
 
-    - name: Instalar LLVM
+    - name: Strip libs nativas (usar llvm-strip do NDK)
       run: |
-        sudo apt-get update
-        sudo apt-get install -y llvm
-        # Descobrir qual versão foi instalada
-        LLVM_STRIP=$(ls /usr/bin/llvm-strip* 2>/dev/null | head -1)
-        echo "llvm-strip encontrado em: $LLVM_STRIP"
-        $LLVM_STRIP --version
+        echo "=== Localizar llvm-strip no NDK ==="
+        NDK_STRIP=$(find $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin -name "llvm-strip" 2>/dev/null | head -1)
 
-    - name: Strip libs nativas (reduzir tamanho)
-      run: |
+        if [ -z "$NDK_STRIP" ]; then
+          echo "ERRO: llvm-strip não encontrado no NDK"
+          echo "Conteúdo do NDK:"
+          ls $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ | grep strip || true
+          exit 1
+        fi
+
+        echo "Usando: $NDK_STRIP"
+        $NDK_STRIP --version
+
         echo "=== Antes do strip ==="
         du -sh app/src/main/jniLibs/arm64-v8a/
         ls -lh app/src/main/jniLibs/arm64-v8a/
 
-        # Descobrir o binário llvm-strip (com ou sem sufixo de versão)
-        LLVM_STRIP=$(ls /usr/bin/llvm-strip* 2>/dev/null | head -1)
-
-        if [ -z "$LLVM_STRIP" ]; then
-          echo "ERRO: llvm-strip não encontrado!"
-          exit 1
-        fi
-
-        echo "Usando: $LLVM_STRIP"
-        find app/src/main/jniLibs/arm64-v8a/ -name "*.so" -exec "$LLVM_STRIP" --strip-unneeded {} +
+        find app/src/main/jniLibs/arm64-v8a/ -name "*.so" -exec "$NDK_STRIP" --strip-unneeded {} +
 
         echo "=== Depois do strip ==="
         du -sh app/src/main/jniLibs/arm64-v8a/
