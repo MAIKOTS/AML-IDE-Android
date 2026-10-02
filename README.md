@@ -117,10 +117,11 @@ Pré-requisitos
 Passos
 
 ```bash
-# Linux / macOS
+# Linux / macOS #
 ./gradlew assembleDebug
-
-# Windows
+```
+```
+# Windows #
 gradlew.bat assembleDebug
 ```
 
