@@ -195,6 +195,4 @@ MAIKOTS
 · GitHub: @MAIKOTS
 · Repositório: github.com/MAIKOTS/AML-IDE-Android
 
-```
-
 ---
