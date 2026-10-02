@@ -2,69 +2,51 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_seletor_item"
+    android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
+    android:minHeight="38dp"
     android:orientation="horizontal"
-    android:paddingStart="10dp"
-    android:paddingEnd="4dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
 
-    <LinearLayout
-        android:id="@+id/itemArquivoCirculo"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+    <!-- Espaço vazio (alinhamento com a seta das pastas) -->
+    <View
+        android:layout_width="14dp"
+        android:layout_height="1dp" />
+
+    <!-- Ícone -->
+    <ImageView
+        android:id="@+id/itemArquivoIcone"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="8dp"
         android:layout_marginEnd="10dp"
-        android:background="@drawable/bg_menu_icon_circle"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:contentDescription="Arquivo"
+        android:src="@drawable/ic_arquivo_generico" />
 
-        <ImageView
-            android:id="@+id/itemArquivoIcone"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:contentDescription="Arquivo"
-            android:src="@drawable/ic_arquivo_cpp" />
-    </LinearLayout>
-
-    <LinearLayout
+    <!-- Nome -->
+    <TextView
+        android:id="@+id/itemArquivoNome"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:ellipsize="middle"
+        android:singleLine="true"
+        android:text="arquivo.cpp"
+        android:textColor="@color/texto_primario"
+        android:textSize="13sp" />
 
-        <TextView
-            android:id="@+id/itemArquivoNome"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:text="arquivo.cpp"
-            android:textColor="#E4E4E7"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/itemArquivoDetalhe"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:singleLine="true"
-            android:text="1.2 KB"
-            android:textColor="@color/texto_secundario"
-            android:textSize="9sp" />
-    </LinearLayout>
-
+    <!-- Tamanho -->
     <TextView
-        android:id="@+id/itemArquivoMenu"
+        android:id="@+id/itemArquivoDetalhe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:padding="10dp"
-        android:text="⋮"
-        android:textColor="@color/texto_secundario"
-        android:textSize="16sp" />
+        android:text="1.2 KB"
+        android:textColor="@color/texto_terciario"
+        android:textSize="10sp"
+        android:typeface="monospace" />
 </LinearLayout>

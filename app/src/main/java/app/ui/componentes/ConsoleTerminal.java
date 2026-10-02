@@ -3,6 +3,7 @@ package ui.componentes;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
@@ -17,28 +18,22 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Um mini-terminal visual: texto monoespaçado, cores por tipo de mensagem,
- * timestamp opcional e auto-scroll para a última linha.
+ * Mini-terminal visual.
  *
- * Uso:
- *   ConsoleTerminal console = new ConsoleTerminal(ctx);
- *   console.info("Iniciando...");
- *   console.ok("Instalado com sucesso!");
- *   console.erro("Falha ao abrir arquivo.");
- *   console.progresso(45);
- *   console.sucesso("Concluído em 12.4s");
+ * ★ Thread-safe: pode ser chamado de qualquer thread.
+ *   Se não estiver no UI thread, as alterações são postadas automaticamente.
  */
 public class ConsoleTerminal extends ScrollView {
 
-    // ---------- Paleta (mesma do design system) ----------
-    private static final int COR_INFO       = 0xFFF4F4F5; // branco
-    private static final int COR_OK         = 0xFF00E676; // verde destaque
-    private static final int COR_ERRO       = 0xFFFF5252; // vermelho
-    private static final int COR_AVISO      = 0xFFFFC107; // amarelo
-    private static final int COR_PROGRESSO  = 0xFF60A5FA; // azul
-    private static final int COR_DIM        = 0xFF6B7280; // cinza apagado
-    private static final int COR_TIMESTAMP  = 0xFF52525B; // cinza escuro
-    private static final int COR_PROMPT     = 0xFF00E676; // verde do prompt
+    // ---------- Paleta ----------
+    private static final int COR_INFO       = 0xFFF4F4F5;
+    private static final int COR_OK         = 0xFF00E676;
+    private static final int COR_ERRO       = 0xFFFF5252;
+    private static final int COR_AVISO      = 0xFFFFC107;
+    private static final int COR_PROGRESSO  = 0xFF60A5FA;
+    private static final int COR_DIM        = 0xFF6B7280;
+    private static final int COR_TIMESTAMP  = 0xFF52525B;
+    private static final int COR_PROMPT     = 0xFF00E676;
 
     private final LinearLayout container;
     private final SimpleDateFormat fmtHora =
@@ -61,73 +56,92 @@ public class ConsoleTerminal extends ScrollView {
         container.setOrientation(LinearLayout.VERTICAL);
         addView(container);
 
-        // Prompt inicial
-        append("$ ", COR_PROMPT);
-        append("console pronto\n", COR_DIM);
+        appendInterno("$ ", COR_PROMPT);
+        appendInterno("console pronto\n", COR_DIM);
     }
 
     // ==========================================================
-    //  API pública
+    //  API pública — todas thread-safe
     // ==========================================================
 
     public void setMostrarTimestamp(boolean mostrar) {
         this.mostrarTimestamp = mostrar;
     }
 
-    /** Linha neutra. */
-    public void info(String texto) {
-        linha("  ", texto, COR_INFO);
+    public void info(final String texto) {
+        executarNoUi(() -> linhaInterno("  ", texto, COR_INFO));
     }
 
-    /** Linha "OK" (sucesso). */
-    public void ok(String texto) {
-        linha("✓ ", texto, COR_OK);
+    public void ok(final String texto) {
+        executarNoUi(() -> linhaInterno("✓ ", texto, COR_OK));
     }
 
-    /** Linha de erro. */
-    public void erro(String texto) {
-        linha("✗ ", texto, COR_ERRO);
+    public void erro(final String texto) {
+        executarNoUi(() -> linhaInterno("✗ ", texto, COR_ERRO));
     }
 
-    /** Linha de aviso. */
-    public void aviso(String texto) {
-        linha("! ", texto, COR_AVISO);
+    public void aviso(final String texto) {
+        executarNoUi(() -> linhaInterno("! ", texto, COR_AVISO));
     }
 
-    /** Linha de progresso (com barra ASCII). */
-    public void progresso(int pct) {
-        int largura = 24;
-        int cheios = Math.max(0, Math.min(largura, pct * largura / 100));
-        StringBuilder barra = new StringBuilder();
-        barra.append('[');
-        for (int i = 0; i < largura; i++) {
-            barra.append(i < cheios ? '█' : '░');
-        }
-        barra.append("] ").append(pct).append('%');
-        linha("  ", barra.toString(), COR_PROGRESSO);
+    public void progresso(final int pct) {
+        executarNoUi(() -> {
+            int largura = 24;
+            int cheios = Math.max(0, Math.min(largura, pct * largura / 100));
+            StringBuilder barra = new StringBuilder();
+            barra.append('[');
+            for (int i = 0; i < largura; i++) {
+                barra.append(i < cheios ? '█' : '░');
+            }
+            barra.append("] ").append(pct).append('%');
+            linhaInterno("  ", barra.toString(), COR_PROGRESSO);
+        });
     }
 
-    /** Linha destacada (ex: resultado final). */
-    public void sucesso(String texto) {
-        append("\n", COR_OK);
-        linha("★ ", texto, COR_OK);
+    public void sucesso(final String texto) {
+        executarNoUi(() -> {
+            appendInterno("\n", COR_OK);
+            linhaInterno("★ ", texto, COR_OK);
+        });
     }
 
-    /** Cabeçalho de seção. */
-    public void secao(String titulo) {
-        append("\n", COR_DIM);
-        linha("── ", titulo, COR_PROGRESSO);
+    public void secao(final String titulo) {
+        executarNoUi(() -> {
+            appendInterno("\n", COR_DIM);
+            linhaInterno("── ", titulo, COR_PROGRESSO);
+        });
     }
 
-    /** Linha em cinza apagado. */
-    public void dim(String texto) {
-        linha("  ", texto, COR_DIM);
+    public void dim(final String texto) {
+        executarNoUi(() -> linhaInterno("  ", texto, COR_DIM));
     }
 
-    /** Mostra a árvore do NDK (indentação + emoji). */
-    public void arvore(java.io.File pasta, String prefixo, int profundidadeMax) {
+    /** Linha sem prefixo — saída crua (ex: stderr do linker). */
+    public void cru(final String texto) {
+        if (texto == null) return;
+        executarNoUi(() -> {
+            appendInterno(texto, COR_INFO);
+            appendInterno("\n", COR_INFO);
+        });
+    }
+
+    public void limpar() {
+        executarNoUi(() -> container.removeAllViews());
+    }
+
+    public void arvore(final java.io.File pasta,
+                       final String prefixo,
+                       final int profundidadeMax) {
+        executarNoUi(() -> arvoreInterno(pasta, prefixo, profundidadeMax));
+    }
+
+    // ==========================================================
+    //  Internos — SEMPRE no UI thread
+    // ==========================================================
+
+    private void arvoreInterno(java.io.File pasta, String prefixo, int profundidadeMax) {
         if (pasta == null || !pasta.exists()) {
-            erro("Pasta não existe: " + pasta);
+            linhaInterno("✗ ", "Pasta não existe: " + pasta, COR_ERRO);
             return;
         }
         if (profundidadeMax <= 0) return;
@@ -135,7 +149,6 @@ public class ConsoleTerminal extends ScrollView {
         java.io.File[] filhos = pasta.listFiles();
         if (filhos == null) return;
 
-        // Ordena: pastas primeiro
         java.util.Arrays.sort(filhos, (a, b) -> {
             if (a.isDirectory() && !b.isDirectory()) return -1;
             if (!a.isDirectory() && b.isDirectory()) return 1;
@@ -149,31 +162,22 @@ public class ConsoleTerminal extends ScrollView {
             String simbolo = f.isDirectory() ? "📁 " : iconeArquivo(f.getName());
             int cor = f.isDirectory() ? COR_PROGRESSO : COR_INFO;
 
-            linha(prefixo + conector, simbolo + f.getName(), cor);
+            linhaInterno(prefixo + conector, simbolo + f.getName(), cor);
 
             if (f.isDirectory()) {
                 String novoPrefixo = prefixo + (ultimo ? "    " : "│   ");
-                arvore(f, novoPrefixo, profundidadeMax - 1);
+                arvoreInterno(f, novoPrefixo, profundidadeMax - 1);
             }
         }
     }
 
-    /** Limpa o console. */
-    public void limpar() {
-        container.removeAllViews();
+    private void linhaInterno(String prefixo, String texto, int cor) {
+        appendInterno(prefixo, cor);
+        appendInterno(texto, cor);
+        appendInterno("\n", cor);
     }
 
-    // ==========================================================
-    //  Internos
-    // ==========================================================
-
-    private void linha(String prefixo, String texto, int cor) {
-        append(prefixo, cor);
-        append(texto, cor);
-        append("\n", cor);
-    }
-
-    private void append(String s, int cor) {
+    private void appendInterno(String s, int cor) {
         SpannableStringBuilder sb = new SpannableStringBuilder();
 
         if (mostrarTimestamp && s.length() > 1 && !s.equals("\n")) {
@@ -197,8 +201,19 @@ public class ConsoleTerminal extends ScrollView {
         tv.setGravity(Gravity.START);
         container.addView(tv);
 
-        // Auto-scroll para o fim
         post(() -> fullScroll(FOCUS_DOWN));
+    }
+
+    /**
+     * Executa o Runnable no UI thread.
+     * Se já estamos nele, roda direto; senão, posta.
+     */
+    private void executarNoUi(Runnable r) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            r.run();
+        } else {
+            post(r);
+        }
     }
 
     private String iconeArquivo(String nome) {

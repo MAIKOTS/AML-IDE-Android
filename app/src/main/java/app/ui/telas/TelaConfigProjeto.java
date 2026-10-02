@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import ui.dialogos.DialogoApp;
 import app.R;
 import modelo.GerenciadorProjetoProperties;
 import modelo.Projeto;
@@ -171,25 +172,16 @@ public class TelaConfigProjeto {
     //  Seletor de opção (std, otimização)
     // ==========================================================
 
-    private void mostrarSeletor(String titulo, String[] opcoes, TextView alvo) {
-        String atual = alvo.getText().toString();
-
-        new AlertDialog.Builder(ctx)
-                .setTitle(titulo)
-                .setSingleChoiceItems(opcoes, indexOf(opcoes, atual), (d, w) -> {
-                    alvo.setText(opcoes[w]);
-                    d.dismiss();
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+    private void mostrarSeletor(String titulo, String[] opcoes, final TextView alvo) {
+    int idxAtual = 0;
+    String atual = alvo.getText().toString();
+    for (int i = 0; i < opcoes.length; i++) {
+        if (opcoes[i].equals(atual)) { idxAtual = i; break; }
     }
 
-    private int indexOf(String[] arr, String valor) {
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i].equals(valor)) return i;
-        }
-        return -1;
-    }
+    DialogoApp.selecaoUnica(ctx, titulo, opcoes, idxAtual,
+            (posicao, valor) -> alvo.setText(valor));
+}
 
     // ==========================================================
     //  Salvar

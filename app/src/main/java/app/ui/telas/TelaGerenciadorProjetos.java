@@ -25,7 +25,7 @@ import java.util.List;
 import app.R;
 import modelo.GerenciadorProjetoProperties;
 import modelo.Projeto;
-import ui.util.GerenciadorDeArquivos;
+import app.util.GerenciadorDeArquivos;
 
 /**
  * Tela de gerenciamento de projetos.

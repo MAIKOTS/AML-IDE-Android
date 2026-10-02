@@ -24,23 +24,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import app.R;
+import ui.componentes.ConsoleTerminal;
 import ui.componentes.GutterView;
 import ui.componentes.ScrollView2D;
 import ui.editor.sintaxe.FabricaDeSintaxe;
 import ui.editor.sintaxe.SintaxeJson;
-import ui.util.CompiladorNative;
-import ui.util.GerenciadorDeArquivos;
+import app.util.CompiladorNativo;
+import app.util.GerenciadorDeArquivos;
 import modelo.Projeto;
 import modelo.GerenciadorProjetoProperties;
+import ui.util.GerenciadorLogsConsole;
 
 public class MontadorDeEditorComAbas {
 
     public interface AcoesEditor {
-    void aoFecharEditor();
+        void aoFecharEditor();
 
-    /** ★ Usuário pediu pra abrir as configs do projeto. */
-    default void aoAbrirConfigs(java.io.File pastaProjeto) { }
-}
+        /** ★ Usuário pediu pra abrir as configs do projeto. */
+        default void aoAbrirConfigs(java.io.File pastaProjeto) { }
+    }
 
     private final Context contexto;
     private final AcoesEditor acoesEditor;
@@ -48,28 +50,28 @@ public class MontadorDeEditorComAbas {
     private AbaArquivo abaAtiva;
 
     // Views do XML
-    private LinearLayout conteinerAbas;
-    private LinearLayout conteinerSimbolos;
-    private EditText campoEditorCodigo;
-    private ScrollView2D editorScroll2D;
-    private TextView consoleDeSaida;
-    private TextView textStatusAba;
-    private GutterView editorGutter;
+    private LinearLayout    conteinerAbas;
+    private LinearLayout    conteinerSimbolos;
+    private EditText        campoEditorCodigo;
+    private ScrollView2D    editorScroll2D;
+    private ConsoleTerminal consoleDeSaida;      // ← trocado de TextView
+    private TextView        textStatusAba;
+    private GutterView      editorGutter;
 
     // Console colapsável
     private LinearLayout consoleContainer;
-    private TextView consoleToggle;
-    private ScrollView consoleScroll;
-    private boolean consoleExpandido = false;
-    private int alturaConsoleRecolhido;
-    private int alturaConsoleExpandido;
+    private TextView     consoleToggle;
+    private ScrollView   consoleScroll;
+    private boolean      consoleExpandido = false;
+    private int          alturaConsoleRecolhido;
+    private int          alturaConsoleExpandido;
 
     // Teclado
     private View raizEditor;
     private View scrollSimbolos;
     private ViewTreeObserver.OnGlobalLayoutListener listenerTeclado;
     private boolean tecladoAbertoAnterior = false;
-    private int alturaTecladoAtual = 0;
+    private int     alturaTecladoAtual = 0;
 
     private boolean estaFormatando = false;
     private boolean ignorarTrocaTexto = false;
@@ -94,41 +96,41 @@ public class MontadorDeEditorComAbas {
     // ==========================================================
 
     public View construirLayout() {
-    raizEditor = LayoutInflater.from(contexto)
-            .inflate(R.layout.tela_editor, null, false);
+        raizEditor = LayoutInflater.from(contexto)
+                .inflate(R.layout.tela_editor, null, false);
 
-    conteinerAbas     = raizEditor.findViewById(R.id.editorConteinerAbas);
-    conteinerSimbolos = raizEditor.findViewById(R.id.editorConteinerSimbolos);
-    campoEditorCodigo = raizEditor.findViewById(R.id.editorCampoCodigo);
-    editorScroll2D    = raizEditor.findViewById(R.id.editorScroll2D);
-    consoleDeSaida    = raizEditor.findViewById(R.id.editorConsole);
-    textStatusAba     = raizEditor.findViewById(R.id.editorStatusAba);
-    editorGutter      = raizEditor.findViewById(R.id.editorGutter);
+        conteinerAbas     = raizEditor.findViewById(R.id.editorConteinerAbas);
+        conteinerSimbolos = raizEditor.findViewById(R.id.editorConteinerSimbolos);
+        campoEditorCodigo = raizEditor.findViewById(R.id.editorCampoCodigo);
+        editorScroll2D    = raizEditor.findViewById(R.id.editorScroll2D);
+        consoleDeSaida    = raizEditor.findViewById(R.id.editorConsole);
+        textStatusAba     = raizEditor.findViewById(R.id.editorStatusAba);
+        editorGutter      = raizEditor.findViewById(R.id.editorGutter);
 
-    consoleContainer  = raizEditor.findViewById(R.id.editorConsoleContainer);
-    consoleToggle     = raizEditor.findViewById(R.id.editorConsoleToggle);
-    consoleScroll     = raizEditor.findViewById(R.id.editorConsoleScroll);
+        consoleContainer  = raizEditor.findViewById(R.id.editorConsoleContainer);
+        consoleToggle     = raizEditor.findViewById(R.id.editorConsoleToggle);
+        consoleScroll     = raizEditor.findViewById(R.id.editorConsoleScroll);
 
-    editorGutter.setEditor(campoEditorCodigo);
-    editorGutter.setScrollView(editorScroll2D);
+        editorGutter.setEditor(campoEditorCodigo);
+        editorGutter.setScrollView(editorScroll2D);
 
-    raizEditor.findViewById(R.id.editorBtnVoltar).setOnClickListener(v -> {
-        salvarArquivoAtual();
-        if (acoesEditor != null) acoesEditor.aoFecharEditor();
-    });
-    raizEditor.findViewById(R.id.editorBtnSalvar).setOnClickListener(v -> salvarArquivoAtual());
-    raizEditor.findViewById(R.id.editorBtnCompilar).setOnClickListener(v -> executarCompilacaoAtual());
+        raizEditor.findViewById(R.id.editorBtnVoltar).setOnClickListener(v -> {
+            salvarArquivoAtual();
+            if (acoesEditor != null) acoesEditor.aoFecharEditor();
+        });
+        raizEditor.findViewById(R.id.editorBtnSalvar).setOnClickListener(v -> salvarArquivoAtual());
+        raizEditor.findViewById(R.id.editorBtnCompilar).setOnClickListener(v -> executarCompilacaoAtual());
 
-    // ★ Botão de Configs do Projeto
-    raizEditor.findViewById(R.id.editorBtnConfigs).setOnClickListener(v -> abrirConfigProjeto());
+        // Botão de Configs do Projeto
+        raizEditor.findViewById(R.id.editorBtnConfigs).setOnClickListener(v -> abrirConfigProjeto());
 
-    configurarConsoleColapsavel();
-    configurarMonitorDeTexto();
-    popularSimbolos();
-    configurarListenerTeclado();
+        configurarConsoleColapsavel();
+        configurarMonitorDeTexto();
+        popularSimbolos();
+        configurarListenerTeclado();
 
-    return raizEditor;
-}
+        return raizEditor;
+    }
 
     // ==========================================================
     //  Console colapsável
@@ -142,40 +144,37 @@ public class MontadorDeEditorComAbas {
         int alturaTela = contexto.getResources().getDisplayMetrics().heightPixels;
         alturaConsoleExpandido = (int) (alturaTela * 0.45f);
 
-        // Aplica estado inicial (recolhido)
         aplicarAlturaConsole(false);
 
-        // Toggle no cabeçalho
         View header = raizEditor.findViewById(R.id.editorConsoleHeader);
         if (header != null) {
             header.setOnClickListener(v -> alternarConsole());
         }
     }
-    
+
     // ==========================================================
-//  Configurações do projeto (Projeto.properties visual)
-// ==========================================================
+    //  Configurações do projeto
+    // ==========================================================
 
-private void abrirConfigProjeto() {
-    if (abaAtiva == null) {
-        Toast.makeText(contexto, "Abra um arquivo do projeto primeiro.",
-                Toast.LENGTH_SHORT).show();
-        return;
-    }
+    private void abrirConfigProjeto() {
+        if (abaAtiva == null) {
+            Toast.makeText(contexto, "Abra um arquivo do projeto primeiro.",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-    File pastaProjeto = encontrarRaizProjeto(abaAtiva.getArquivo());
-    if (pastaProjeto == null) {
-        Toast.makeText(contexto,
-                "Este arquivo não pertence a nenhum projeto.",
-                Toast.LENGTH_SHORT).show();
-        return;
-    }
+        File pastaProjeto = encontrarRaizProjeto(abaAtiva.getArquivo());
+        if (pastaProjeto == null) {
+            Toast.makeText(contexto,
+                    "Este arquivo não pertence a nenhum projeto.",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-    // ★ Delega pra quem chamou (MainActivity) navegar
-    if (acoesEditor != null) {
-        acoesEditor.aoAbrirConfigs(pastaProjeto);
+        if (acoesEditor != null) {
+            acoesEditor.aoAbrirConfigs(pastaProjeto);
+        }
     }
-}
 
     private void alternarConsole() {
         consoleExpandido = !consoleExpandido;
@@ -197,7 +196,6 @@ private void abrirConfigProjeto() {
             consoleToggle.setText(expandido ? "▼" : "▲");
         }
 
-        // Ao expandir, rola pro final do console
         if (expandido && consoleScroll != null) {
             consoleScroll.post(() -> consoleScroll.fullScroll(View.FOCUS_DOWN));
         }
@@ -221,7 +219,7 @@ private void abrirConfigProjeto() {
             Rect areaVisivel = new Rect();
             raizEditor.getWindowVisibleDisplayFrame(areaVisivel);
 
-            int alturaTela = raizEditor.getRootView().getHeight();
+            int alturaTela    = raizEditor.getRootView().getHeight();
             int alturaTeclado = alturaTela - areaVisivel.bottom;
 
             boolean tecladoAberto = alturaTeclado > alturaTela * 0.15f;
@@ -461,99 +459,64 @@ private void abrirConfigProjeto() {
         salvarArquivoAtual();
 
         File pastaProjeto = encontrarRaizProjeto(abaAtiva.getArquivo());
-
         if (pastaProjeto == null) {
             compilarArquivoAvulso();
             return;
         }
 
-        // ★ Expande o console automaticamente ao compilar
-        if (!consoleExpandido) {
-            consoleExpandido = true;
-            aplicarAlturaConsole(true);
-        }
-
         Projeto projeto = GerenciadorProjetoProperties.carregar(pastaProjeto);
-
         if (projeto.abis == null || projeto.abis.isEmpty()) {
             projeto.abis = new ArrayList<>();
             projeto.abis.add("arm64-v8a");
         }
 
-        final int totalAbis = projeto.abis.size();
+        // ★ Limpa o console antes de começar
+        if (consoleDeSaida != null) {
+            consoleDeSaida.limpar();
+        }
 
-        consoleDeSaida.setTextColor(Color.parseColor("#29B6F6"));
-        consoleDeSaida.setText(
-                "── COMPILAÇÃO DO PROJETO ──\n" +
-                "Projeto:  " + projeto.nome + " v" + projeto.versao + "\n" +
-                "ABIs:     " + String.join(", ", projeto.abis) + "\n" +
-                "API:      " + projeto.api + "\n" +
-                "Saída:    " + projeto.libNome + ".so\n" +
-                "Std:      " + projeto.std + "\n" +
-                "Flags:    " + (projeto.flags.isEmpty() ? "—" : String.join(" ", projeto.flags)) + "\n\n" +
-                "Compilando " + totalAbis + " ABI(s)...\n\n");
+        // ★ Cria o logger (ConsoleTerminal implementa todos os métodos)
+        GerenciadorLogsConsole log = new GerenciadorLogsConsole(contexto, consoleDeSaida);
 
         final long inicio = System.currentTimeMillis();
 
-        CompiladorNative.compilarProjeto(contexto, projeto,
-                new CompiladorNative.ResultadoCompilacao() {
+        CompiladorNativo.compilarProjeto(contexto, projeto,
+                new CompiladorNativo.ResultadoCompilacao() {
 
                     @Override
                     public void aoSucesso(File arquivoSo) {
-                        String abi = arquivoSo.getParentFile() != null
-                                ? arquivoSo.getParentFile().getName()
-                                : "?";
-                        final String linha = "  ✓ [" + abi + "] "
-                                + arquivoSo.getName()
-                                + "  (" + arquivoSo.length() + " bytes)\n";
-                        new Handler(Looper.getMainLooper()).post(() ->
-                                consoleDeSaida.append(linha));
+                        // Progresso já é logado dentro do CompiladorNativo
                     }
 
                     @Override
                     public void aoErro(String mensagemErro) {
-                        // resumo vem no aoFinalizar
+                        // Resumo já vem no aoFinalizar
                     }
 
                     @Override
                     public void aoFinalizar(int sucessos, int totalAbis, String resumo) {
                         long duracao = System.currentTimeMillis() - inicio;
 
-                        int cor;
-                        if (sucessos == totalAbis) {
-                            cor = Color.parseColor("#00E676");
-                        } else if (sucessos == 0) {
-                            cor = Color.parseColor("#FF5252");
-                        } else {
-                            cor = Color.parseColor("#FFC107");
-                        }
-
                         String bloco =
-                                "\n── RESULTADO ──\n" +
+                                "\n── RESULTADO FINAL ──\n" +
                                 "Projeto:  " + sucessos + "/" + totalAbis
                                         + " ABI(s) compilada(s)\n" +
-                                "Duração:  " + formatarDuracao(duracao) + "\n\n" +
-                                (resumo == null || resumo.isEmpty()
-                                        ? "(sem detalhes)"
-                                        : resumo);
+                                "Duração:  " + GerenciadorLogsConsole.formatarDuracao(duracao) + "\n";
 
-                        final int corFinal = cor;
                         new Handler(Looper.getMainLooper()).post(() -> {
-                            consoleDeSaida.setTextColor(corFinal);
-                            consoleDeSaida.append(bloco);
+                            if (consoleDeSaida != null) {
+                                if (sucessos == totalAbis) {
+                                    consoleDeSaida.ok(bloco);
+                                } else if (sucessos == 0) {
+                                    consoleDeSaida.erro(bloco);
+                                } else {
+                                    consoleDeSaida.aviso(bloco);
+                                }
+                            }
                         });
                     }
-                });
-    }
-
-    private File encontrarRaizProjeto(File arquivo) {
-        File pasta = arquivo.getParentFile();
-        while (pasta != null) {
-            File props = new File(pasta, GerenciadorProjetoProperties.NOME_ARQUIVO);
-            if (props.isFile()) return pasta;
-            pasta = pasta.getParentFile();
-        }
-        return null;
+                },
+                log);
     }
 
     private void compilarArquivoAvulso() {
@@ -564,34 +527,20 @@ private void abrirConfigProjeto() {
         String nomeBase = arquivoFonte.getName().replaceAll("\\.[^.]+$", "");
         File arquivoSaida = new File(pastaOut, "lib" + nomeBase + ".so");
 
-        if (!consoleExpandido) {
-            consoleExpandido = true;
-            aplicarAlturaConsole(true);
+        if (consoleDeSaida != null) {
+            consoleDeSaida.limpar();
         }
 
-        consoleDeSaida.setTextColor(Color.parseColor("#FFC107"));
-        consoleDeSaida.setText(
-                "⚠ Projeto.properties não encontrado.\n" +
-                "Compilando apenas: " + arquivoFonte.getName() + "\n\n");
+        GerenciadorLogsConsole log = new GerenciadorLogsConsole(contexto, consoleDeSaida);
 
-        CompiladorNative.compilarParaSo(contexto, arquivoFonte, arquivoSaida,
-                new CompiladorNative.ResultadoCompilacao() {
+        CompiladorNativo.compilarParaSo(contexto, arquivoFonte, arquivoSaida,
+                new CompiladorNativo.ResultadoCompilacao() {
                     @Override
-                    public void aoSucesso(File arquivoSo) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            consoleDeSaida.setTextColor(Color.parseColor("#00E676"));
-                            consoleDeSaida.setText("✓ Compilado: " + arquivoSo.getName() + "\n");
-                        });
-                    }
-
+                    public void aoSucesso(File arquivoSo) { }
                     @Override
-                    public void aoErro(String mensagemErro) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            consoleDeSaida.setTextColor(Color.parseColor("#FF5252"));
-                            consoleDeSaida.setText("✗ Falha:\n\n" + mensagemErro);
-                        });
-                    }
-                });
+                    public void aoErro(String mensagemErro) { }
+                },
+                log);
     }
 
     private String formatarDuracao(long ms) {
@@ -662,8 +611,23 @@ private void abrirConfigProjeto() {
             sintaxe.aplicarSintaxe(editable);
         }
     }
+        
+        /**
+ * Sobe na árvore de pastas procurando um Projeto.properties.
+ * Retorna a pasta que contém o arquivo, ou null se não encontrar.
+ */
+private File encontrarRaizProjeto(File arquivo) {
+    if (arquivo == null) return null;
+    File pasta = arquivo.getParentFile();
+    while (pasta != null) {
+        File props = new File(pasta, GerenciadorProjetoProperties.NOME_ARQUIVO);
+        if (props.isFile()) return pasta;
+        pasta = pasta.getParentFile();
+    }
+    return null;
+}
 
-    public TextView obterConsoleDeSaida() { return consoleDeSaida; }
+    public ConsoleTerminal obterConsoleDeSaida() { return consoleDeSaida; }
 
     private int dp(int v) {
         return (int) (v * contexto.getResources().getDisplayMetrics().density);

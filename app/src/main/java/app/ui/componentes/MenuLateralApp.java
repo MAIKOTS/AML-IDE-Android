@@ -13,7 +13,7 @@ public class MenuLateralApp extends PainelLateralDeslizante {
     public interface AcoesMenu {
         void aoNavegar(NavegadorTelas.EstadoTela tela);
         /** Nova ação: usuário quer abrir a tela de complementos. */
-        void aoAbrirComplementos();
+        void aoAbrirFerramentasIde();
     }
 
     public MenuLateralApp(Context contexto,
@@ -42,8 +42,8 @@ public class MenuLateralApp extends PainelLateralDeslizante {
         menu.findViewById(R.id.menu_item_editor).setOnClickListener(
                 v -> acoes.aoNavegar(NavegadorTelas.EstadoTela.TELA_EDITOR));
 
-        menu.findViewById(R.id.menu_item_complementos).setOnClickListener(
-                v -> acoes.aoAbrirComplementos());
+        menu.findViewById(R.id.menu_item_ferramentas).setOnClickListener(
+                v -> acoes.aoAbrirFerramentasIde());
 
         return menu;
     }

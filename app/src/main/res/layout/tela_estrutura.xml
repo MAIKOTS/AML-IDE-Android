@@ -5,31 +5,33 @@
     android:background="@color/bg_base"
     android:orientation="vertical">
 
-    <!-- ========== Toolbar ========== -->
+    <!-- ===================== TOOLBAR ===================== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/bg_superficie"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
-        <TextView
+        <!-- Voltar -->
+        <ImageButton
             android:id="@+id/estruturaBtnVoltar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Voltar"
             android:padding="10dp"
-            android:text="← Voltar"
-            android:textColor="@color/texto_primario"
-            android:textSize="13sp" />
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_seta_voltar"
+            android:tint="@color/texto_primario" />
 
+        <!-- Título (nome + caminho) -->
         <LinearLayout
+            android:id="@+id/estruturaTituloContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -52,27 +54,49 @@
                 android:id="@+id/estruturaCaminho"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="start"
+                android:ellipsize="middle"
                 android:gravity="center"
                 android:singleLine="true"
-                android:text=""
                 android:textColor="@color/texto_secundario"
                 android:textSize="9sp"
                 android:typeface="monospace" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/estruturaBtnMenu"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
+        <!-- Buscar -->
+        <ImageButton
+            android:id="@+id/estruturaBtnBusca"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Buscar"
             android:padding="10dp"
-            android:text="⋮"
-            android:textColor="@color/verde_destaque"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_procurar"
+            android:tint="@color/texto_primario" />
+
+        <!-- Configs -->
+        <ImageButton
+            android:id="@+id/estruturaBtnConfigs"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Configurações do projeto"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_config"
+            android:tint="@color/texto_primario" />
+
+        <!-- Menu -->
+        <ImageButton
+            android:id="@+id/estruturaBtnMenu"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Menu"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_menu"
+            android:tint="@color/texto_primario" />
     </LinearLayout>
 
     <View
@@ -80,7 +104,125 @@
         android:layout_height="1dp"
         android:background="@color/borda_sutil" />
 
-    <!-- ========== Barra de Edição Inline (NOVO) ========== -->
+    <!-- ===================== BARRA DE BUSCA ===================== -->
+    <LinearLayout
+        android:id="@+id/estruturaBarraBusca"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_superficie"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/ic_procurar"
+            android:tint="@color/texto_secundario" />
+
+        <EditText
+            android:id="@+id/estruturaCampoBusca"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="Buscar no projeto..."
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:singleLine="true"
+            android:textColor="@color/texto_primario"
+            android:textColorHint="@color/texto_terciario"
+            android:textSize="13sp" />
+
+        <!-- Toggle: nome / conteúdo -->
+        <TextView
+            android:id="@+id/estruturaBtnModoBusca"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="10dp"
+            android:text="Aa"
+            android:textColor="@color/verde_destaque"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:typeface="monospace" />
+
+        <!-- Fechar busca -->
+        <ImageButton
+            android:id="@+id/estruturaBtnFecharBusca"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Fechar busca"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_fechar"
+            android:tint="@color/texto_secundario" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/estruturaDivisorBusca"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/borda_sutil"
+        android:visibility="gone" />
+
+    <!-- ===================== BARRA DE ABAS ===================== -->
+    <LinearLayout
+        android:id="@+id/estruturaBarraAbas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_superficie"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/estruturaAba0"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:text="Aba 1"
+            android:textColor="@color/verde_destaque"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/estruturaAba1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:text="Aba 2"
+            android:textColor="@color/texto_secundario"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/estruturaDivisorAbas"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/borda_sutil" />
+
+    <!-- ===================== BARRA DE EDIÇÃO INLINE ===================== -->
     <LinearLayout
         android:id="@+id/estruturaBarraEdicao"
         android:layout_width="match_parent"
@@ -148,7 +290,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- ========== Barra de Clipboard ========== -->
+    <!-- ===================== BARRA DE CLIPBOARD ===================== -->
     <LinearLayout
         android:id="@+id/estruturaBarraClipboard"
         android:layout_width="match_parent"
@@ -198,7 +340,7 @@
             android:textSize="11sp" />
     </LinearLayout>
 
-    <!-- ========== Árvore ========== -->
+    <!-- ===================== ÁRVORE ===================== -->
     <ScrollView
         android:id="@+id/estruturaScroll"
         android:layout_width="match_parent"
@@ -211,7 +353,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="10dp" />
+            android:paddingTop="6dp"
+            android:paddingBottom="24dp" />
     </ScrollView>
 
 </LinearLayout>

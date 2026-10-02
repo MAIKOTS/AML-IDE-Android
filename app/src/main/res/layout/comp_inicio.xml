@@ -5,7 +5,7 @@
     android:background="#09090B"
     android:orientation="vertical">
 
-    <!-- ===================== BARRA SUPERIOR ===================== -->
+    <!-- ===================== HEADER ===================== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,13 +22,12 @@
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:background="@drawable/bg_icon_button"
-            android:contentDescription="Menu principal"
+            android:contentDescription="Menu"
             android:padding="10dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_menu"
             android:tint="#00E676" />
 
-        <!-- Bloco de título -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -41,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.05"
                 android:text="@string/nome_app"
-                android:textColor="#00931A"
+                android:textColor="#00E676"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -66,7 +65,6 @@
             android:tint="#00E676" />
     </LinearLayout>
 
-    <!-- Divisor sutil -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
@@ -84,8 +82,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:paddingTop="24dp"
             android:paddingBottom="32dp">
 
@@ -93,65 +91,46 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:letterSpacing="0.15"
-                android:text="BEM-VINDO"
-                android:textColor="#A1A1AA"
+                android:letterSpacing="0.2"
+                android:text="BEM-VINDO DE VOLTA"
+                android:textColor="#00E676"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="O que vamos construir hoje?"
+                android:lineSpacingExtra="2dp"
+                android:text="O que vamos\nconstruir hoje?"
                 android:textColor="#F4F4F5"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="24dp"
-                android:text="Crie, importe ou clone um projeto para começar."
-                android:textColor="#A1A1AA"
-                android:textSize="13sp" />
-
-            <!-- ========== Rótulo de seção ========== -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:letterSpacing="0.15"
-                android:text="AÇÕES RÁPIDAS"
-                android:textColor="#A1A1AA"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-
-            <!-- ========== Card: Novo Projeto (DESTAQUE) ========== -->
+            <!-- ========== HERO: Novo Projeto ========== -->
             <LinearLayout
                 android:id="@+id/btn_novo_projeto"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_card"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_card_hero"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <LinearLayout
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
                     android:layout_marginEnd="16dp"
-                    android:background="@drawable/bg_icon_circle"
+                    android:background="@drawable/bg_icon_circle_grande"
                     android:gravity="center"
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
                         android:contentDescription="Novo projeto"
                         android:src="@drawable/ic_novo_projeto"
                         android:tint="#00E676" />
@@ -166,213 +145,216 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Projetos Manager"
+                        android:text="Novo Projeto"
                         android:textColor="#F4F4F5"
-                        android:textSize="15sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
-                        android:text="Crie e edite seus projetos AML IDE"
+                        android:text="Comece do zero com template pronto"
                         android:textColor="#A1A1AA"
                         android:textSize="12sp" />
                 </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="#A1A1AA"
-                    android:textSize="22sp" />
             </LinearLayout>
 
-            <!-- ========== Card: Abrir Projeto ========== -->
+            <!-- ========== Row: Abrir + Clonar ========== -->
             <LinearLayout
-                android:id="@+id/btn_abrir_projeto"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_card"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="16dp">
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
 
+                <!-- Abrir Projeto -->
                 <LinearLayout
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="@drawable/bg_icon_circle"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:contentDescription="Abrir projeto"
-                        android:src="@drawable/ic_pasta"
-                        android:tint="#00E676" />
-                </LinearLayout>
-
-                <LinearLayout
+                    android:id="@+id/btn_abrir_projeto"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:background="@drawable/bg_card"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="140dp"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_icon_circle"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:contentDescription="Abrir projeto"
+                            android:src="@drawable/ic_pasta"
+                            android:tint="#00E676" />
+                    </LinearLayout>
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
                         android:text="Abrir Projeto"
                         android:textColor="#F4F4F5"
-                        android:textSize="15sp"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:text="Selecione e edite seus projetos existentes"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Editar um projeto existente"
                         android:textColor="#A1A1AA"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
                 </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="#A1A1AA"
-                    android:textSize="22sp" />
-            </LinearLayout>
+                <View
+                    android:layout_width="10dp"
+                    android:layout_height="1dp" />
 
-            <!-- ========== Card: Clonar do GitHub ========== -->
-            <LinearLayout
-                android:id="@+id/btn_clonar_github"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="16dp">
-
+                <!-- Clonar GitHub -->
                 <LinearLayout
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="@drawable/bg_icon_circle"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:contentDescription="Clonar do GitHub"
-                        android:src="@drawable/ic_github"
-                        android:tint="#00E676" />
-                </LinearLayout>
-
-                <LinearLayout
+                    android:id="@+id/btn_clonar_github"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:background="@drawable/bg_card"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="140dp"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_icon_circle"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:contentDescription="Clonar do GitHub"
+                            android:src="@drawable/ic_github"
+                            android:tint="#00E676" />
+                    </LinearLayout>
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Clonar do GitHub"
+                        android:layout_marginTop="14dp"
+                        android:text="Clonar Repo"
                         android:textColor="#F4F4F5"
-                        android:textSize="15sp"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:text="Obtenha repositórios via Git/HTTPS"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Baixar de um repositório Git"
                         android:textColor="#A1A1AA"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
                 </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="#A1A1AA"
-                    android:textSize="22sp" />
             </LinearLayout>
-            
-            <!-- ========== Projetos Recentes ========== -->
-<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="28dp"
-    android:layout_marginBottom="10dp"
-    android:letterSpacing="0.15"
-    android:text="PROJETOS RECENTES"
-    android:textColor="#A1A1AA"
-    android:textSize="10sp"
-    android:textStyle="bold" />
 
-<!-- Container dos cards (preenchido dinamicamente) -->
-<LinearLayout
-    android:id="@+id/home_recentes_container"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" />
-
-<!-- Estado vazio -->
-<LinearLayout
-    android:id="@+id/home_recentes_vazio"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/bg_card"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="16dp"
-    android:visibility="gone">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="14dp"
-        android:text="📭"
-        android:textSize="22sp" />
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nenhum projeto ainda"
-            android:textColor="#F4F4F5"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Crie um projeto para ele aparecer aqui"
-            android:textColor="#A1A1AA"
-            android:textSize="11sp" />
-    </LinearLayout>
-</LinearLayout>
-
-            <!-- ========== Rodapé discreto ========== -->
-            <TextView
+            <!-- ========== Rótulo Recentes ========== -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
+                android:layout_marginBottom="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.15"
+                    android:text="PROJETOS RECENTES"
+                    android:textColor="#A1A1AA"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:background="#1F1F23" />
+            </LinearLayout>
+
+            <!-- ========== Carrossel de Recentes ========== -->
+            <HorizontalScrollView
+                android:id="@+id/home_recentes_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:paddingEnd="16dp"
+                android:paddingBottom="4dp">
+
+                <LinearLayout
+                    android:id="@+id/home_recentes_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <!-- ========== Estado vazio ========== -->
+            <LinearLayout
+                android:id="@+id/home_recentes_vazio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="14dp"
+                    android:text="📭"
+                    android:textSize="26sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nenhum projeto ainda"
+                        android:textColor="#F4F4F5"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Toque em &quot;Novo Projeto&quot; para começar"
+                        android:textColor="#A1A1AA"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ========== Rodapé ========== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
                 android:gravity="center"
                 android:text="AML IDE • v1.00"
                 android:textColor="#3F3F46"

@@ -1,30 +1,38 @@
 package ui.telas;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
-import android.view.Gravity;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import ui.dialogos.DialogoApp;
+import ui.dialogos.ItemAcao;    // ← ADICIONAR
 import app.R;
 
 public class MontadorDeEstrutura {
@@ -32,10 +40,20 @@ public class MontadorDeEstrutura {
     public interface AcoesEstrutura {
         void aoSelecionarArquivo(File arquivo);
         void aoVoltar();
+        default void aoAbrirConfigs(File pastaProjeto) { }
     }
 
     // ==========================================================
-    //  Item de menu (ícone + texto + ação)
+    //  Constantes
+    // ==========================================================
+
+    private static final int NUM_ABAS = 2;
+    private static final int MAX_RESULTADOS_BUSCA = 300;
+    private static final long DEBOUNCE_BUSCA_MS = 250;
+    private static final int MAX_BYTES_CONTEUDO = 512 * 1024; // 512 KB por arquivo
+
+    // ==========================================================
+    //  Item de menu
     // ==========================================================
     private static class ItemMenu {
         final int iconeRes;
@@ -46,6 +64,23 @@ public class MontadorDeEstrutura {
             this.iconeRes = iconeRes;
             this.texto = texto;
             this.acao = acao;
+        }
+    }
+
+    // ==========================================================
+    //  Resultado de busca (conteúdo)
+    // ==========================================================
+    private static class ResultadoBusca {
+        File   arquivo;
+        int    numeroLinha;
+        String conteudo;
+        String caminhoRelativo;
+
+        ResultadoBusca(File a, int l, String c, String rel) {
+            arquivo = a;
+            numeroLinha = l;
+            conteudo = c;
+            caminhoRelativo = rel;
         }
     }
 
@@ -64,27 +99,61 @@ public class MontadorDeEstrutura {
     private File pastaDestino = null;
     private File arquivoAlvo = null;
 
+    // ==========================================================
+    //  Estado
+    // ==========================================================
     private final Context contexto;
     private final AcoesEstrutura acoes;
 
     private File pastaRaiz;
 
-    private TextView textNome;
-    private TextView textCaminho;
+    // Abas
+    private int abaAtiva = 0;
+    private final Set<String>[] expandidasPorAba;
+
+    // Busca
+    private boolean buscaAtiva = false;
+    private boolean modoConteudo = false;
+    private final Handler handlerBusca = new Handler(Looper.getMainLooper());
+    private Runnable runnableBusca;
+
+    // ==========================================================
+    //  Views
+    // ==========================================================
+    private TextView     textNome;
+    private TextView     textCaminho;
     private LinearLayout conteinerArvore;
 
+    private LinearLayout barraBusca;
+    private View         divisorBusca;
+    private EditText     campoBusca;
+    private TextView     btnModoBusca;
+
+    private LinearLayout barraAbas;
+    private View         divisorAbas;
+    private TextView     abaBotao0;
+    private TextView     abaBotao1;
+
     private LinearLayout barraEdicao;
-    private TextView edicaoLabel;
-    private EditText edicaoInput;
-    private TextView edicaoConfirmar;
-    private TextView edicaoCancelar;
+    private TextView     edicaoLabel;
+    private EditText     edicaoInput;
+    private TextView     edicaoConfirmar;
+    private TextView     edicaoCancelar;
 
     private LinearLayout barraClipboard;
-    private TextView clipboardTexto;
+    private TextView     clipboardTexto;
 
+    // ==========================================================
+    //  Construtor
+    // ==========================================================
+    @SuppressWarnings("unchecked")
     public MontadorDeEstrutura(Context contexto, AcoesEstrutura acoes) {
         this.contexto = contexto;
         this.acoes = acoes;
+        this.expandidasPorAba = new Set[NUM_ABAS];
+        for (int i = 0; i < NUM_ABAS; i++) {
+            expandidasPorAba[i] = new HashSet<>();
+        }
     }
 
     // ==========================================================
@@ -95,9 +164,20 @@ public class MontadorDeEstrutura {
         View raiz = LayoutInflater.from(contexto)
                 .inflate(R.layout.tela_estrutura, null, false);
 
+        // ---- Bind ----
         textNome        = raiz.findViewById(R.id.estruturaNome);
         textCaminho     = raiz.findViewById(R.id.estruturaCaminho);
         conteinerArvore = raiz.findViewById(R.id.estruturaArvore);
+
+        barraBusca   = raiz.findViewById(R.id.estruturaBarraBusca);
+        divisorBusca = raiz.findViewById(R.id.estruturaDivisorBusca);
+        campoBusca   = raiz.findViewById(R.id.estruturaCampoBusca);
+        btnModoBusca = raiz.findViewById(R.id.estruturaBtnModoBusca);
+
+        barraAbas   = raiz.findViewById(R.id.estruturaBarraAbas);
+        divisorAbas = raiz.findViewById(R.id.estruturaDivisorAbas);
+        abaBotao0   = raiz.findViewById(R.id.estruturaAba0);
+        abaBotao1   = raiz.findViewById(R.id.estruturaAba1);
 
         barraEdicao     = raiz.findViewById(R.id.estruturaBarraEdicao);
         edicaoLabel     = raiz.findViewById(R.id.estruturaEdicaoLabel);
@@ -105,21 +185,56 @@ public class MontadorDeEstrutura {
         edicaoConfirmar = raiz.findViewById(R.id.estruturaEdicaoConfirmar);
         edicaoCancelar  = raiz.findViewById(R.id.estruturaEdicaoCancelar);
 
-        barraClipboard  = raiz.findViewById(R.id.estruturaBarraClipboard);
-        clipboardTexto  = raiz.findViewById(R.id.estruturaClipboardTexto);
+        barraClipboard = raiz.findViewById(R.id.estruturaBarraClipboard);
+        clipboardTexto = raiz.findViewById(R.id.estruturaClipboardTexto);
 
         this.pastaRaiz = pastaProjeto;
 
+        // ---- Toolbar ----
         raiz.findViewById(R.id.estruturaBtnVoltar).setOnClickListener(v -> {
-            if (acoes != null) acoes.aoVoltar();
+            if (buscaAtiva) {
+                fecharBusca();
+            } else if (acoes != null) {
+                acoes.aoVoltar();
+            }
         });
 
+        raiz.findViewById(R.id.estruturaBtnBusca).setOnClickListener(v -> abrirBusca());
+        raiz.findViewById(R.id.estruturaBtnConfigs).setOnClickListener(v -> {
+            if (pastaRaiz != null && pastaRaiz.exists() && acoes != null) {
+                acoes.aoAbrirConfigs(pastaRaiz);
+            }
+        });
         raiz.findViewById(R.id.estruturaBtnMenu).setOnClickListener(v -> abrirMenuPrincipal());
 
+        // ---- Busca ----
+        raiz.findViewById(R.id.estruturaBtnFecharBusca).setOnClickListener(v -> fecharBusca());
+        btnModoBusca.setOnClickListener(v -> alternarModoBusca());
+        campoBusca.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
+            @Override public void afterTextChanged(Editable e) {
+                agendarBusca(e.toString());
+            }
+        });
+        campoBusca.setOnEditorActionListener((v, actionId, ev) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                executarBuscaImediata(campoBusca.getText().toString());
+                esconderTeclado(campoBusca);
+                return true;
+            }
+            return false;
+        });
+
+        // ---- Abas ----
+        abaBotao0.setOnClickListener(v -> trocarAba(0));
+        abaBotao1.setOnClickListener(v -> trocarAba(1));
+        atualizarVisualAbas();
+
+        // ---- Edição inline ----
         edicaoConfirmar.setOnClickListener(v -> confirmarEdicao());
         edicaoCancelar.setOnClickListener(v -> cancelarEdicao());
-
-        edicaoInput.setOnEditorActionListener((v, actionId, event) -> {
+        edicaoInput.setOnEditorActionListener((v, actionId, ev) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE
                     || actionId == EditorInfo.IME_ACTION_GO
                     || actionId == EditorInfo.IME_ACTION_SEND) {
@@ -129,6 +244,7 @@ public class MontadorDeEstrutura {
             return false;
         });
 
+        // ---- Clipboard ----
         raiz.findViewById(R.id.estruturaBtnColar).setOnClickListener(v -> colarClipboard(pastaRaiz));
         raiz.findViewById(R.id.estruturaBtnCancelarClipboard).setOnClickListener(v -> {
             clipboardArquivo = null;
@@ -136,6 +252,7 @@ public class MontadorDeEstrutura {
             atualizarBarraClipboard();
         });
 
+        // ---- Título ----
         if (pastaProjeto != null && pastaProjeto.exists()) {
             textNome.setText(nomeProjeto != null ? nomeProjeto : pastaProjeto.getName());
             textCaminho.setText(pastaProjeto.getAbsolutePath());
@@ -147,6 +264,491 @@ public class MontadorDeEstrutura {
         atualizarBarraClipboard();
         recarregarArvore();
         return raiz;
+    }
+
+    // ==========================================================
+    //  Abas
+    // ==========================================================
+
+    private void trocarAba(int nova) {
+        if (nova == abaAtiva) return;
+        abaAtiva = nova;
+        atualizarVisualAbas();
+        recarregarArvore();
+    }
+
+    private void atualizarVisualAbas() {
+        if (abaBotao0 == null || abaBotao1 == null) return;
+
+        boolean eh0 = (abaAtiva == 0);
+
+        abaBotao0.setTextColor(eh0
+                ? Color.parseColor("#00E676")
+                : Color.parseColor("#A1A1AA"));
+        abaBotao0.setTypeface(null,
+                eh0 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+
+        abaBotao1.setTextColor(!eh0
+                ? Color.parseColor("#00E676")
+                : Color.parseColor("#A1A1AA"));
+        abaBotao1.setTypeface(null,
+                !eh0 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+    }
+
+    // ==========================================================
+    //  Busca
+    // ==========================================================
+
+    private void abrirBusca() {
+        buscaAtiva = true;
+        barraBusca.setVisibility(View.VISIBLE);
+        divisorBusca.setVisibility(View.VISIBLE);
+
+        // Esconde abas durante busca
+        barraAbas.setVisibility(View.GONE);
+        divisorAbas.setVisibility(View.GONE);
+
+        campoBusca.setText("");
+        campoBusca.requestFocus();
+
+        campoBusca.postDelayed(() -> {
+            InputMethodManager imm = (InputMethodManager)
+                    contexto.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(campoBusca, InputMethodManager.SHOW_IMPLICIT);
+            }
+        }, 100);
+    }
+
+    private void fecharBusca() {
+        buscaAtiva = false;
+        modoConteudo = false;
+        barraBusca.setVisibility(View.GONE);
+        divisorBusca.setVisibility(View.GONE);
+
+        // Restaura abas
+        barraAbas.setVisibility(View.VISIBLE);
+        divisorAbas.setVisibility(View.VISIBLE);
+
+        campoBusca.setText("");
+        esconderTeclado(campoBusca);
+        atualizarTextoModoBusca();
+        recarregarArvore();
+    }
+
+    private void alternarModoBusca() {
+        modoConteudo = !modoConteudo;
+        atualizarTextoModoBusca();
+
+        String termo = campoBusca.getText().toString();
+        if (!termo.isEmpty()) {
+            executarBuscaImediata(termo);
+        }
+    }
+
+    private void atualizarTextoModoBusca() {
+        if (btnModoBusca == null) return;
+        btnModoBusca.setText(modoConteudo ? "Ab" : "Aa");
+        btnModoBusca.setTextColor(modoConteudo
+                ? Color.parseColor("#FFC107")
+                : Color.parseColor("#00E676"));
+    }
+
+    /** Debounce da busca conforme digita. */
+    private void agendarBusca(String termo) {
+        if (runnableBusca != null) handlerBusca.removeCallbacks(runnableBusca);
+        runnableBusca = () -> executarBuscaImediata(termo);
+        handlerBusca.postDelayed(runnableBusca, DEBOUNCE_BUSCA_MS);
+    }
+
+    /** Executa a busca agora. */
+    private void executarBuscaImediata(String termo) {
+        if (!buscaAtiva) return;
+        recarregarArvore();
+    }
+
+    private void esconderTeclado(View v) {
+        InputMethodManager imm = (InputMethodManager)
+                contexto.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+    }
+
+    // ==========================================================
+    //  Renderização
+    // ==========================================================
+
+    private void recarregarArvore() {
+        if (conteinerArvore == null) return;
+        conteinerArvore.removeAllViews();
+
+        if (pastaRaiz == null || !pastaRaiz.exists()) {
+            addAvisoVazio("Nenhum projeto carregado.");
+            return;
+        }
+
+        if (buscaAtiva && campoBusca != null) {
+            String termo = campoBusca.getText().toString().trim();
+            if (termo.isEmpty()) {
+                addAvisoVazio("Digite algo para buscar.");
+                return;
+            }
+            if (modoConteudo) {
+                executarBuscaConteudo(termo);
+            } else {
+                executarBuscaNome(termo);
+            }
+            return;
+        }
+
+        // Árvore normal
+        Set<String> expandidas = expandidasPorAba[abaAtiva];
+        desenharConteudo(pastaRaiz, conteinerArvore, 0, expandidas, null);
+    }
+
+    private void addAvisoVazio(String texto) {
+        TextView v = new TextView(contexto);
+        v.setText(texto);
+        v.setTextColor(Color.parseColor("#52525B"));
+        v.setTextSize(12);
+        v.setPadding(dp(24), dp(24), dp(24), dp(24));
+        conteinerArvore.addView(v);
+    }
+
+    // ---- Árvore normal ----
+
+    private void desenharConteudo(File diretorio,
+                                  LinearLayout pai,
+                                  int recuo,
+                                  Set<String> expandidas,
+                                  Set<String> filtroCaminhosValidos) {
+
+        File[] filhos = diretorio.listFiles();
+        if (filhos == null) return;
+
+        List<File> validos = new ArrayList<>();
+        for (File f : filhos) {
+            String nome = f.getName();
+            if (nome.startsWith(".")) continue;
+            if (nome.equals("Projeto.properties")) continue;
+            validos.add(f);
+        }
+
+        validos.sort((a, b) -> {
+            if (a.isDirectory() && !b.isDirectory()) return -1;
+            if (!a.isDirectory() && b.isDirectory()) return 1;
+            return a.getName().compareToIgnoreCase(b.getName());
+        });
+
+        if (validos.isEmpty()) {
+            TextView vazio = new TextView(contexto);
+            vazio.setText("(vazia)");
+            vazio.setTextColor(Color.parseColor("#3F3F46"));
+            vazio.setTextSize(10);
+            vazio.setPadding(dp(12) + recuo + dp(14) + dp(8), dp(8), dp(8), dp(8));
+            pai.addView(vazio);
+            return;
+        }
+
+        for (File f : validos) {
+            if (f.isDirectory()) {
+                boolean expandida = expandidas.contains(f.getAbsolutePath());
+                pai.addView(criarItemPasta(f, recuo, expandida));
+
+                if (expandida) {
+                    LinearLayout filho = new LinearLayout(contexto);
+                    filho.setOrientation(LinearLayout.VERTICAL);
+                    filho.setLayoutParams(new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT));
+                    pai.addView(filho);
+                    desenharConteudo(f, filho, recuo + 1, expandidas, filtroCaminhosValidos);
+                }
+            } else {
+                pai.addView(criarItemArquivo(f, recuo));
+            }
+        }
+    }
+
+    // ---- Busca por nome ----
+
+    private void executarBuscaNome(String termo) {
+        String t = termo.toLowerCase();
+        Set<String> expandidas = new HashSet<>();
+        List<View> views = new ArrayList<>();
+
+        buscarPorNome(pastaRaiz, t, 0, expandidas, views);
+
+        if (views.isEmpty()) {
+            addAvisoVazio("Nada encontrado para \"" + termo + "\"");
+            return;
+        }
+
+        for (View v : views) conteinerArvore.addView(v);
+    }
+
+    private boolean buscarPorNome(File pasta, String termo, int recuo,
+                                  Set<String> expandidas, List<View> saida) {
+        File[] filhos = pasta.listFiles();
+        if (filhos == null) return false;
+
+        // Ordena
+        List<File> validos = new ArrayList<>();
+        for (File f : filhos) {
+            String nome = f.getName();
+            if (nome.startsWith(".")) continue;
+            if (nome.equals("Projeto.properties")) continue;
+            validos.add(f);
+        }
+        validos.sort((a, b) -> {
+            if (a.isDirectory() && !b.isDirectory()) return -1;
+            if (!a.isDirectory() && b.isDirectory()) return 1;
+            return a.getName().compareToIgnoreCase(b.getName());
+        });
+
+        boolean algumMatch = false;
+
+        for (File f : validos) {
+            boolean nomeCasa = f.getName().toLowerCase().contains(termo);
+
+            if (f.isDirectory()) {
+                // Tenta dentro primeiro
+                List<View> subviews = new ArrayList<>();
+                boolean dentroCasa = buscarPorNome(f, termo, recuo + 1, expandidas, subviews);
+
+                if (nomeCasa || dentroCasa) {
+                    saida.add(criarItemPasta(f, recuo, dentroCasa));
+                    expandidas.add(f.getAbsolutePath());
+                    if (dentroCasa) {
+                        saida.addAll(subviews);
+                    }
+                    algumMatch = true;
+                }
+            } else {
+                if (nomeCasa) {
+                    saida.add(criarItemArquivo(f, recuo));
+                    algumMatch = true;
+                }
+            }
+        }
+
+        return algumMatch;
+    }
+
+    // ---- Busca por conteúdo ----
+
+    private void executarBuscaConteudo(String termo) {
+        List<ResultadoBusca> resultados = new ArrayList<>();
+        buscarPorConteudo(pastaRaiz, termo, resultados);
+
+        if (resultados.isEmpty()) {
+            addAvisoVazio("Nenhuma linha contém \"" + termo + "\"");
+            return;
+        }
+
+        for (ResultadoBusca r : resultados) {
+            conteinerArvore.addView(criarItemResultado(r));
+        }
+
+        if (resultados.size() >= MAX_RESULTADOS_BUSCA) {
+            TextView aviso = new TextView(contexto);
+            aviso.setText("Mostrando os primeiros " + MAX_RESULTADOS_BUSCA
+                    + " resultados. Refine sua busca.");
+            aviso.setTextColor(Color.parseColor("#FFC107"));
+            aviso.setTextSize(10);
+            aviso.setPadding(dp(16), dp(12), dp(16), dp(12));
+            conteinerArvore.addView(aviso);
+        }
+    }
+
+    private void buscarPorConteudo(File pasta,
+                                   String termo,
+                                   List<ResultadoBusca> saida) {
+        if (saida.size() >= MAX_RESULTADOS_BUSCA) return;
+
+        File[] filhos = pasta.listFiles();
+        if (filhos == null) return;
+
+        for (File f : filhos) {
+            if (saida.size() >= MAX_RESULTADOS_BUSCA) return;
+            String nome = f.getName();
+            if (nome.startsWith(".")) continue;
+            if (nome.equals("Projeto.properties")) continue;
+
+            if (f.isDirectory()) {
+                // Evita entrar em deps/ (muito grande) e lib/ (binários)
+                if (nome.equals("deps")) continue;
+                buscarPorConteudo(f, termo, saida);
+            } else {
+                if (f.length() > MAX_BYTES_CONTEUDO) continue;
+                if (!ehTexto(f.getName())) continue;
+                buscarNoArquivo(f, termo, saida);
+            }
+        }
+    }
+
+    private void buscarNoArquivo(File arquivo, String termo, List<ResultadoBusca> saida) {
+        String termoLower = termo.toLowerCase();
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream(arquivo), "UTF-8"))) {
+
+            String linha;
+            int numero = 0;
+            while ((linha = br.readLine()) != null) {
+                numero++;
+                if (linha.toLowerCase().contains(termoLower)) {
+                    String rel = caminhoRelativo(pastaRaiz, arquivo);
+                    saida.add(new ResultadoBusca(
+                            arquivo, numero, linha.trim(), rel));
+                    if (saida.size() >= MAX_RESULTADOS_BUSCA) return;
+                }
+            }
+        } catch (IOException ignored) {
+            // arquivo não-texto ou ilegível — ignora
+        }
+    }
+
+    private boolean ehTexto(String nome) {
+        String n = nome.toLowerCase();
+        if (n.endsWith(".png") || n.endsWith(".jpg") || n.endsWith(".jpeg")
+                || n.endsWith(".gif") || n.endsWith(".so") || n.endsWith(".a")
+                || n.endsWith(".o") || n.endsWith(".zip") || n.endsWith(".jar")
+                || n.endsWith(".ttf") || n.endsWith(".otf") || n.endsWith(".mp3")
+                || n.endsWith(".mp4") || n.endsWith(".apk") || n.endsWith(".dex")) {
+            return false;
+        }
+        return true;
+    }
+
+    // ---- Itens de árvore ----
+
+    private View criarItemPasta(File pasta, int recuo, boolean expandida) {
+        View item = LayoutInflater.from(contexto)
+                .inflate(R.layout.item_estrutura_pasta, conteinerArvore, false);
+
+        // Indentação
+        item.setPadding(
+                dp(12) + recuo * dp(16),
+                dp(6), dp(12), dp(6));
+
+        TextView seta    = item.findViewById(R.id.itemPastaSeta);
+        ImageView icone  = item.findViewById(R.id.itemPastaIcone);
+        TextView nome    = item.findViewById(R.id.itemPastaNome);
+        TextView detalhe = item.findViewById(R.id.itemPastaDetalhe);
+
+        nome.setText(pasta.getName());
+        detalhe.setText(contarConteudo(pasta));
+        seta.setText(expandida ? "▼" : "▶");
+
+        item.setOnClickListener(v -> {
+            Set<String> expandidas = expandidasPorAba[abaAtiva];
+            String path = pasta.getAbsolutePath();
+            if (expandidas.contains(path)) {
+                expandidas.remove(path);
+            } else {
+                expandidas.add(path);
+            }
+            recarregarArvore();
+        });
+
+        item.setOnLongClickListener(v -> {
+            menuItem(pasta, true);
+            return true;
+        });
+
+        return item;
+    }
+
+    private View criarItemArquivo(File arquivo, int recuo) {
+        View item = LayoutInflater.from(contexto)
+                .inflate(R.layout.item_estrutura_arquivo, conteinerArvore, false);
+
+        item.setPadding(
+                dp(12) + recuo * dp(16),
+                dp(6), dp(12), dp(6));
+
+        ImageView icone  = item.findViewById(R.id.itemArquivoIcone);
+        TextView nome    = item.findViewById(R.id.itemArquivoNome);
+        TextView detalhe = item.findViewById(R.id.itemArquivoDetalhe);
+
+        nome.setText(arquivo.getName());
+        detalhe.setText(formatarTamanho(arquivo.length()));
+        aplicarIconeArquivo(icone, arquivo.getName());
+
+        item.setOnClickListener(v -> {
+            if (acoes != null) acoes.aoSelecionarArquivo(arquivo);
+        });
+
+        item.setOnLongClickListener(v -> {
+            menuItem(arquivo, false);
+            return true;
+        });
+
+        return item;
+    }
+
+    private View criarItemResultado(ResultadoBusca r) {
+        View item = LayoutInflater.from(contexto)
+                .inflate(R.layout.item_estrutura_resultado, conteinerArvore, false);
+
+        ImageView icone  = item.findViewById(R.id.itemResultadoIcone);
+        TextView nome    = item.findViewById(R.id.itemResultadoNome);
+        TextView linha   = item.findViewById(R.id.itemResultadoLinha);
+        TextView caminho = item.findViewById(R.id.itemResultadoCaminho);
+        TextView conteudo = item.findViewById(R.id.itemResultadoConteudo);
+
+        nome.setText(r.arquivo.getName());
+        linha.setText("L" + r.numeroLinha);
+        caminho.setText(r.caminhoRelativo);
+        conteudo.setText(r.conteudo);
+        aplicarIconeArquivo(icone, r.arquivo.getName());
+
+        item.setOnClickListener(v -> {
+            if (acoes != null) acoes.aoSelecionarArquivo(r.arquivo);
+        });
+
+        return item;
+    }
+
+    // ==========================================================
+    //  Menu principal (toolbar ⋮)
+    // ==========================================================
+
+    private void abrirMenuPrincipal() {
+        if (pastaRaiz == null || !pastaRaiz.exists()) return;
+
+        List<ItemMenu> itens = new ArrayList<>();
+
+        itens.add(new ItemMenu(
+                R.drawable.ic_novo_ficheiro,
+                "Novo arquivo",
+                () -> abrirBarraEdicao(ModoEdicao.CRIAR_ARQUIVO, pastaRaiz, null, null)));
+
+        itens.add(new ItemMenu(
+                R.drawable.ic_pasta,
+                "Nova pasta",
+                () -> abrirBarraEdicao(ModoEdicao.CRIAR_PASTA, pastaRaiz, null, null)));
+
+        if (clipboardArquivo != null) {
+            itens.add(new ItemMenu(
+                    R.drawable.ic_colar,
+                    "Colar aqui",
+                    () -> colarClipboard(pastaRaiz)));
+        }
+
+        itens.add(new ItemMenu(
+                R.drawable.ic_atualizar,
+                "Atualizar",
+                this::recarregarArvore));
+
+        itens.add(new ItemMenu(
+                R.drawable.ic_config,
+                "Configurações do projeto",
+                () -> {
+                    if (acoes != null) acoes.aoAbrirConfigs(pastaRaiz);
+                }));
+
+        mostrarMenuComIcones("Ações", itens);
     }
 
     // ==========================================================
@@ -174,9 +776,7 @@ public class MontadorDeEstrutura {
                 edicaoLabel.setText("Renomear:");
                 edicaoInput.setHint("novo-nome");
                 edicaoInput.setText(valorInicial != null ? valorInicial : "");
-                if (valorInicial != null) {
-                    edicaoInput.setSelection(valorInicial.length());
-                }
+                if (valorInicial != null) edicaoInput.setSelection(valorInicial.length());
                 break;
             default:
                 return;
@@ -197,7 +797,7 @@ public class MontadorDeEstrutura {
         this.arquivoAlvo = null;
         barraEdicao.setVisibility(View.GONE);
         edicaoInput.setText("");
-        esconderTeclado();
+        esconderTeclado(edicaoInput);
     }
 
     private void confirmarEdicao() {
@@ -234,25 +834,23 @@ public class MontadorDeEstrutura {
 
         File novo = new File(pastaDestino, nome);
         if (novo.exists()) {
-            Toast.makeText(contexto, "Já existe um item com esse nome.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(contexto, "Já existe.", Toast.LENGTH_SHORT).show();
             return false;
         }
 
         try {
             if (ehArquivo) {
                 if (!novo.createNewFile()) {
-                    Toast.makeText(contexto, "Falha ao criar arquivo.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(contexto, "Falha ao criar.", Toast.LENGTH_SHORT).show();
                     return false;
                 }
             } else {
                 if (!novo.mkdirs()) {
-                    Toast.makeText(contexto, "Falha ao criar pasta.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(contexto, "Falha ao criar.", Toast.LENGTH_SHORT).show();
                     return false;
                 }
             }
-            Toast.makeText(contexto,
-                    (ehArquivo ? "Arquivo criado" : "Pasta criada"),
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(contexto, "Criado.", Toast.LENGTH_SHORT).show();
             return true;
         } catch (IOException e) {
             Toast.makeText(contexto, "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -266,7 +864,7 @@ public class MontadorDeEstrutura {
 
         File novo = new File(alvo.getParentFile(), novoNome);
         if (novo.exists()) {
-            Toast.makeText(contexto, "Já existe um item com esse nome.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(contexto, "Já existe.", Toast.LENGTH_SHORT).show();
             return false;
         }
 
@@ -279,274 +877,21 @@ public class MontadorDeEstrutura {
         }
     }
 
-    private void esconderTeclado() {
-        InputMethodManager imm = (InputMethodManager)
-                contexto.getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) imm.hideSoftInputFromWindow(edicaoInput.getWindowToken(), 0);
-    }
-
     // ==========================================================
     //  Menu com ícones (AlertDialog customizado)
     // ==========================================================
 
     private void mostrarMenuComIcones(String titulo, List<ItemMenu> itens) {
-        // Adapter customizado
-        MenuComIconeAdapter adapter = new MenuComIconeAdapter(itens);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(contexto);
-        builder.setTitle(titulo);
-
-        final AlertDialog dialog = builder.setAdapter(adapter, null).create();
-
-        adapter.setOnItemClick(pos -> {
-            dialog.dismiss();
-            itens.get(pos).acao.run();
-        });
-
-        dialog.show();
+    List<ItemAcao> acoes = new ArrayList<>();
+    for (ItemMenu it : itens) {
+        acoes.add(new ItemAcao(it.iconeRes, it.texto, it.acao));
     }
-
-    /** Adapter que exibe ícone + texto no AlertDialog. */
-    private class MenuComIconeAdapter extends BaseAdapter {
-
-        interface OnItemClick { void onClick(int pos); }
-
-        private final List<ItemMenu> itens;
-        private OnItemClick listener;
-
-        MenuComIconeAdapter(List<ItemMenu> itens) {
-            this.itens = itens;
-        }
-
-        void setOnItemClick(OnItemClick l) { this.listener = l; }
-
-        @Override public int getCount() { return itens.size(); }
-        @Override public Object getItem(int i) { return itens.get(i); }
-        @Override public long getItemId(int i) { return i; }
-
-        @Override
-        public View getView(int pos, View convertView, ViewGroup parent) {
-            ItemMenu item = itens.get(pos);
-
-            LinearLayout linha = new LinearLayout(contexto);
-            linha.setOrientation(LinearLayout.HORIZONTAL);
-            linha.setGravity(Gravity.CENTER_VERTICAL);
-            linha.setPadding(dp(20), dp(14), dp(20), dp(14));
-            linha.setClickable(true);
-
-            ImageView icone = new ImageView(contexto);
-            LinearLayout.LayoutParams lpIcone = new LinearLayout.LayoutParams(dp(22), dp(22));
-            lpIcone.setMargins(0, 0, dp(18), 0);
-            icone.setLayoutParams(lpIcone);
-            icone.setImageResource(item.iconeRes);
-            icone.setColorFilter(Color.parseColor("#00E676"));
-            linha.addView(icone);
-
-            TextView texto = new TextView(contexto);
-            texto.setText(item.texto);
-            texto.setTextColor(Color.parseColor("#F4F4F5"));
-            texto.setTextSize(14);
-            linha.addView(texto);
-
-            linha.setOnClickListener(v -> {
-                if (listener != null) listener.onClick(pos);
-            });
-
-            return linha;
-        }
-    }
-
-    // ==========================================================
-    //  Menu principal (toolbar ⋮)
-    // ==========================================================
-
-    private void abrirMenuPrincipal() {
-        if (pastaRaiz == null || !pastaRaiz.exists()) return;
-
-        List<ItemMenu> itens = new ArrayList<>();
-
-        itens.add(new ItemMenu(
-                R.drawable.ic_novo_ficheiro,
-                "Novo arquivo",
-                () -> abrirBarraEdicao(ModoEdicao.CRIAR_ARQUIVO, pastaRaiz, null, null)));
-
-        itens.add(new ItemMenu(
-                R.drawable.ic_pasta,
-                "Nova pasta",
-                () -> abrirBarraEdicao(ModoEdicao.CRIAR_PASTA, pastaRaiz, null, null)));
-
-        if (clipboardArquivo != null) {
-            itens.add(new ItemMenu(
-                    R.drawable.ic_colar,
-                    "Colar aqui",
-                    () -> colarClipboard(pastaRaiz)));
-        }
-
-        itens.add(new ItemMenu(
-                R.drawable.ic_atualizar,
-                "Atualizar",
-                this::recarregarArvore));
-
-        mostrarMenuComIcones("Ações", itens);
-    }
-
-    // ==========================================================
-    //  Recarrega a árvore
-    // ==========================================================
-
-    private void recarregarArvore() {
-        conteinerArvore.removeAllViews();
-
-        if (pastaRaiz == null || !pastaRaiz.exists()) {
-            TextView vazio = new TextView(contexto);
-            vazio.setText("Nenhum projeto carregado.");
-            vazio.setTextColor(Color.parseColor("#6B7280"));
-            vazio.setPadding(dp(24), dp(24), dp(24), dp(24));
-            conteinerArvore.addView(vazio);
-            return;
-        }
-
-        desenharConteudo(pastaRaiz, conteinerArvore, 0);
-    }
-
-    private void desenharConteudo(File diretorio, LinearLayout conteinerPai, int recuo) {
-    File[] filhos = diretorio.listFiles();
-    if (filhos == null) return;
-
-    List<File> validos = new ArrayList<>();
-    for (File f : filhos) {
-        String nome = f.getName();
-
-        // Ignora ocultos (.git, .idea, etc.)
-        if (nome.startsWith(".")) continue;
-
-        // ★ Projeto.properties é editado via botão "Configs"
-        //   no editor — não aparece na árvore.
-        if (nome.equals("Projeto.properties")) continue;
-
-        validos.add(f);
-    }
-
-    validos.sort((a, b) -> {
-        if (a.isDirectory() && !b.isDirectory()) return -1;
-        if (!a.isDirectory() && b.isDirectory()) return 1;
-        return a.getName().compareToIgnoreCase(b.getName());
-    });
-
-    if (validos.isEmpty()) {
-        TextView vazio = new TextView(contexto);
-        vazio.setText("(pasta vazia)");
-        vazio.setTextColor(Color.parseColor("#52525B"));
-        vazio.setTextSize(11);
-        vazio.setPadding(dp(24) + recuo, dp(16), dp(16), dp(16));
-        conteinerPai.addView(vazio);
-        return;
-    }
-
-    for (File f : validos) {
-        if (f.isDirectory()) {
-            conteinerPai.addView(criarItemPasta(f, recuo));
-        } else {
-            conteinerPai.addView(criarItemArquivo(f, recuo));
-        }
-    }
+    DialogoApp.listaAcoes(contexto, titulo, acoes);
 }
+    
 
     // ==========================================================
-    //  Item de pasta
-    // ==========================================================
-
-    private View criarItemPasta(File pasta, int recuo) {
-        LinearLayout wrapper = new LinearLayout(contexto);
-        wrapper.setOrientation(LinearLayout.VERTICAL);
-        wrapper.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        LinearLayout conteinerFilhos = new LinearLayout(contexto);
-        conteinerFilhos.setOrientation(LinearLayout.VERTICAL);
-        conteinerFilhos.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        View card = LayoutInflater.from(contexto)
-                .inflate(R.layout.item_estrutura_pasta, wrapper, false);
-
-        LinearLayout.LayoutParams lpCard = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lpCard.setMargins(recuo, dp(3), 0, dp(3));
-        card.setLayoutParams(lpCard);
-
-        TextView nome    = card.findViewById(R.id.itemPastaNome);
-        TextView detalhe = card.findViewById(R.id.itemPastaDetalhe);
-        TextView seta    = card.findViewById(R.id.itemPastaSeta);
-        TextView menu    = card.findViewById(R.id.itemPastaMenu);
-
-        nome.setText(pasta.getName());
-        detalhe.setText(contarConteudo(pasta));
-
-        final boolean[] expandido = {false};
-
-        card.setOnClickListener(v -> {
-            if (expandido[0]) {
-                conteinerFilhos.removeAllViews();
-                seta.setText("▶");
-                expandido[0] = false;
-            } else {
-                desenharConteudo(pasta, conteinerFilhos, recuo + dp(16));
-                seta.setText("▼");
-                expandido[0] = true;
-            }
-        });
-
-        card.setOnLongClickListener(v -> {
-            menuItem(pasta, true);
-            return true;
-        });
-
-        menu.setOnClickListener(v -> menuItem(pasta, true));
-
-        wrapper.addView(card);
-        wrapper.addView(conteinerFilhos);
-        return wrapper;
-    }
-
-    // ==========================================================
-    //  Item de arquivo
-    // ==========================================================
-
-    private View criarItemArquivo(File arquivo, int recuo) {
-        View card = LayoutInflater.from(contexto)
-                .inflate(R.layout.item_estrutura_arquivo, null, false);
-
-        LinearLayout.LayoutParams lpCard = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lpCard.setMargins(recuo, dp(3), 0, dp(3));
-        card.setLayoutParams(lpCard);
-
-        TextView nome    = card.findViewById(R.id.itemArquivoNome);
-        TextView detalhe = card.findViewById(R.id.itemArquivoDetalhe);
-        TextView menu    = card.findViewById(R.id.itemArquivoMenu);
-        ImageView icone  = card.findViewById(R.id.itemArquivoIcone);
-
-        nome.setText(arquivo.getName());
-        detalhe.setText(formatarTamanho(arquivo.length()));
-        aplicarIconeArquivo(icone, arquivo.getName());
-
-        card.setOnClickListener(v -> {
-            if (acoes != null) acoes.aoSelecionarArquivo(arquivo);
-        });
-
-        card.setOnLongClickListener(v -> {
-            menuItem(arquivo, false);
-            return true;
-        });
-
-        menu.setOnClickListener(v -> menuItem(arquivo, false));
-
-        return card;
-    }
-
-    // ==========================================================
-    //  Menu de contexto (arquivo ou pasta)
+    //  Menu de contexto
     // ==========================================================
 
     private void menuItem(File item, boolean ehPasta) {
@@ -619,24 +964,26 @@ public class MontadorDeEstrutura {
     //  Excluir
     // ==========================================================
 
-    private void confirmarDeletar(File item, boolean ehPasta) {
-        String aviso = ehPasta
-                ? "Todos os arquivos dentro serão apagados. Esta ação não pode ser desfeita."
-                : "Esta ação não pode ser desfeita.";
+    private void confirmarDeletar(final File item, boolean ehPasta) {
+    String aviso = ehPasta
+            ? "Todos os arquivos dentro serão apagados. Esta ação não pode ser desfeita."
+            : "Esta ação não pode ser desfeita.";
 
-        new AlertDialog.Builder(contexto)
-                .setTitle("Excluir " + (ehPasta ? "pasta" : "arquivo") + "?")
-                .setMessage(item.getName() + "\n\n" + aviso)
-                .setPositiveButton("Excluir", (d, w) -> {
-                    boolean ok = deletarRecursivo(item);
-                    Toast.makeText(contexto,
-                            ok ? "Excluído." : "Falha ao excluir.",
-                            Toast.LENGTH_SHORT).show();
-                    recarregarArvore();
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
+    DialogoApp.confirmar(
+            contexto,
+            "Excluir " + (ehPasta ? "pasta" : "arquivo") + "?",
+            item.getName() + "\n\n" + aviso,
+            "Excluir",
+            "Cancelar",
+            true,
+            () -> {
+                boolean ok = deletarRecursivo(item);
+                Toast.makeText(contexto,
+                        ok ? "Excluído." : "Falha ao excluir.",
+                        Toast.LENGTH_SHORT).show();
+                recarregarArvore();
+            });
+}
 
     private boolean deletarRecursivo(File f) {
         if (f == null || !f.exists()) return false;
@@ -741,7 +1088,7 @@ public class MontadorDeEstrutura {
     }
 
     // ==========================================================
-    //  Ícones por extensão
+    //  Ícones
     // ==========================================================
 
     private void aplicarIconeArquivo(ImageView iv, String nomeArquivo) {
@@ -758,9 +1105,16 @@ public class MontadorDeEstrutura {
         } else if (nome.endsWith(".so")) {
             iv.setImageResource(R.drawable.ic_arquivo_generico);
             cor = Color.parseColor("#F59E0B");
-        } else if (nome.endsWith(".txt") || nome.endsWith(".md")) {
+        } else if (nome.endsWith(".md") || nome.endsWith(".txt")) {
             iv.setImageResource(R.drawable.ic_arquivo_generico);
             cor = Color.parseColor("#A1A1AA");
+        } else if (nome.endsWith(".json") || nome.endsWith(".xml")) {
+            iv.setImageResource(R.drawable.ic_arquivo_generico);
+            cor = Color.parseColor("#60A5FA");
+        } else if (nome.endsWith(".sh") || nome.endsWith(".properties")
+                || nome.endsWith(".gradle")) {
+            iv.setImageResource(R.drawable.ic_arquivo_generico);
+            cor = Color.parseColor("#FBBF24");
         } else {
             iv.setImageResource(R.drawable.ic_arquivo_generico);
             cor = Color.parseColor("#6B7280");
@@ -775,27 +1129,33 @@ public class MontadorDeEstrutura {
 
     private String contarConteudo(File pasta) {
         File[] filhos = pasta.listFiles();
-        if (filhos == null || filhos.length == 0) return "vazia";
+        if (filhos == null) return "";
 
-        int pastas = 0, arquivos = 0;
+        int qtd = 0;
         for (File f : filhos) {
             if (f.getName().startsWith(".")) continue;
-            if (f.isDirectory()) pastas++; else arquivos++;
+            if (f.getName().equals("Projeto.properties")) continue;
+            qtd++;
         }
-
-        if (pastas == 0 && arquivos == 0) return "vazia";
-        StringBuilder sb = new StringBuilder();
-        if (pastas > 0) sb.append(pastas).append(" pasta").append(pastas != 1 ? "s" : "");
-        if (pastas > 0 && arquivos > 0) sb.append(", ");
-        if (arquivos > 0) sb.append(arquivos).append(" arq.");
-        return sb.toString();
+        return qtd == 0 ? "" : String.valueOf(qtd);
     }
 
     private String formatarTamanho(long bytes) {
         if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
-        if (bytes < 1024L * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024));
-        return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
+        if (bytes < 1024 * 1024) return String.format("%.1f K", bytes / 1024.0);
+        if (bytes < 1024L * 1024 * 1024) return String.format("%.1f M", bytes / (1024.0 * 1024));
+        return String.format("%.2f G", bytes / (1024.0 * 1024 * 1024));
+    }
+
+    private String caminhoRelativo(File raiz, File arquivo) {
+        try {
+            String base = raiz.getAbsolutePath();
+            String full = arquivo.getAbsolutePath();
+            if (full.startsWith(base + File.separator)) {
+                return full.substring(base.length() + 1);
+            }
+        } catch (Exception ignored) { }
+        return arquivo.getName();
     }
 
     private int dp(int v) {

@@ -4,10 +4,13 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,15 +37,26 @@ public class MontadorDeHome {
         void aoCliqueProjetoRecente(File pasta);
     }
 
-    /** Quantos projetos recentes mostrar na home. */
-    private static final int LIMITE_RECENTES = 5;
+    /** Quantos projetos mostrar no carrossel. */
+    private static final int LIMITE_RECENTES = 10;
+
+    /** Largura de cada card no carrossel (dp). */
+    private static final int LARGURA_CARD_DP = 150;
+
+    /** Debounce pra evitar re-scan em rajada. */
+    private static final long INTERVALO_MINIMO_MS = 3000L;
 
     private final Context contexto;
     private final AcoesHome acoes;
+    private final Handler handlerUI = new Handler(Looper.getMainLooper());
 
-    // Views atualizadas a cada construirLayout()
+    private HorizontalScrollView scrollRecentes;
     private LinearLayout containerRecentes;
     private LinearLayout vazioRecentes;
+
+    private long ultimaAtualizacao = 0L;
+    private boolean escaneando = false;
+    private Runnable scanAgendado;
 
     public MontadorDeHome(Context contexto, AcoesHome acoes) {
         this.contexto = contexto;
@@ -53,7 +67,6 @@ public class MontadorDeHome {
         View layout = LayoutInflater.from(contexto)
                 .inflate(R.layout.comp_inicio, null, false);
 
-        // -------- Mapeia ações rápidas --------
         View btnHomeMenu     = layout.findViewById(R.id.btn_home_menu);
         View btnHomeConfig   = layout.findViewById(R.id.btn_home_config);
         View btnNovoProjeto  = layout.findViewById(R.id.btn_novo_projeto);
@@ -86,183 +99,209 @@ public class MontadorDeHome {
             });
         }
 
-        // -------- Seção de projetos recentes --------
+        scrollRecentes    = layout.findViewById(R.id.home_recentes_scroll);
         containerRecentes = layout.findViewById(R.id.home_recentes_container);
         vazioRecentes     = layout.findViewById(R.id.home_recentes_vazio);
 
+        ultimaAtualizacao = 0;
         carregarProjetosRecentes();
 
         return layout;
     }
 
-    /**
-     * Recarrega a lista de recentes sem reconstruir todo o layout.
-     * Use quando já estiver na Home e quiser atualizar (ex: depois
-     * de criar/renomear/deletar um projeto em outra tela).
-     */
+    /** Recarrega a lista de recentes (com debounce). */
     public void atualizarRecentes() {
-        if (containerRecentes != null) {
-            carregarProjetosRecentes();
+        if (containerRecentes == null) return;
+
+        long agora = System.currentTimeMillis();
+        if (agora - ultimaAtualizacao < INTERVALO_MINIMO_MS) {
+            return;
         }
+
+        if (scanAgendado != null) handlerUI.removeCallbacks(scanAgendado);
+        scanAgendado = this::carregarProjetosRecentes;
+        handlerUI.postDelayed(scanAgendado, 150);
     }
 
     // ==========================================================
-    //  Lista de projetos recentes
+    //  Dados prontos pra render
+    // ==========================================================
+
+    private static class ItemRecente {
+        File   pasta;
+        String descricao;   // "v1.0.0 · 3 fontes"
+        String tempo;       // "agora", "2h"
+        int    totalAbis;   // pra mostrar "2 ABIs" se quiser
+    }
+
+    // ==========================================================
+    //  Scan + render
     // ==========================================================
 
     private void carregarProjetosRecentes() {
         if (containerRecentes == null || vazioRecentes == null) return;
+        if (escaneando) return;
+        escaneando = true;
 
-        containerRecentes.removeAllViews();
+        new Thread(() -> {
 
-        File pastaProjetos = new File(
-                Environment.getExternalStorageDirectory(),
-                "AML_IDE/Projetos");
+            File pastaProjetos = new File(
+                    Environment.getExternalStorageDirectory(),
+                    "AML_IDE/Projetos");
 
-        if (!pastaProjetos.isDirectory()) {
-            vazioRecentes.setVisibility(View.VISIBLE);
-            return;
-        }
-
-        File[] arquivos = pastaProjetos.listFiles();
-        if (arquivos == null) arquivos = new File[0];
-
-        List<File> projetos = new ArrayList<>();
-        for (File f : arquivos) {
-            if (f.isDirectory() && !f.getName().startsWith(".")) {
-                projetos.add(f);
+            if (!pastaProjetos.isDirectory()) {
+                handlerUI.post(() -> mostrarVazio());
+                return;
             }
-        }
 
-        if (projetos.isEmpty()) {
-            vazioRecentes.setVisibility(View.VISIBLE);
-            return;
-        }
+            File[] arquivos = pastaProjetos.listFiles();
+            if (arquivos == null) arquivos = new File[0];
 
-        vazioRecentes.setVisibility(View.GONE);
+            List<File> projetos = new ArrayList<>();
+            for (File f : arquivos) {
+                if (f.isDirectory() && !f.getName().startsWith(".")) {
+                    projetos.add(f);
+                }
+            }
 
-        // Ordena por última modificação (mais recente primeiro)
-        projetos.sort((a, b) -> Long.compare(
-                obterUltimaModificacao(b),
-                obterUltimaModificacao(a)));
+            if (projetos.isEmpty()) {
+                handlerUI.post(() -> mostrarVazio());
+                return;
+            }
 
-        int limite = Math.min(LIMITE_RECENTES, projetos.size());
-        for (int i = 0; i < limite; i++) {
-            containerRecentes.addView(
-                    criarCardProjetoRecente(projetos.get(i)));
-        }
+            projetos.sort((a, b) -> Long.compare(
+                    obterUltimaModificacao(b),
+                    obterUltimaModificacao(a)));
 
-        // Link "Ver todos" se tiver mais que o limite
-        if (projetos.size() > limite) {
-            TextView verTodos = new TextView(contexto);
-            verTodos.setText("Ver todos os " + projetos.size() + " projetos  ›");
-            verTodos.setTextColor(Color.parseColor("#00E676"));
-            verTodos.setTextSize(12);
-            verTodos.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-            verTodos.setGravity(Gravity.CENTER);
-            verTodos.setPadding(dp(8), dp(14), dp(8), dp(4));
-            verTodos.setOnClickListener(v -> {
-                if (acoes != null) acoes.aoCliqueImportarProjeto();
+            int limite = Math.min(LIMITE_RECENTES, projetos.size());
+            List<ItemRecente> itens = new ArrayList<>();
+            for (int i = 0; i < limite; i++) {
+                File p = projetos.get(i);
+                ItemRecente item = new ItemRecente();
+                item.pasta     = p;
+                item.descricao = descreverProjeto(p);
+                item.tempo     = tempoAtras(obterUltimaModificacao(p));
+                itens.add(item);
+            }
+
+            handlerUI.post(() -> {
+                escaneando = false;
+                ultimaAtualizacao = System.currentTimeMillis();
+
+                containerRecentes.removeAllViews();
+                containerRecentes.setVisibility(View.VISIBLE);
+                if (scrollRecentes != null) scrollRecentes.setVisibility(View.VISIBLE);
+                vazioRecentes.setVisibility(View.GONE);
+
+                for (int i = 0; i < itens.size(); i++) {
+                    ItemRecente item = itens.get(i);
+                    boolean ehUltimo = (i == itens.size() - 1);
+                    containerRecentes.addView(
+                            criarCardProjetoRecente(item, ehUltimo));
+                }
             });
-            containerRecentes.addView(verTodos);
-        }
+
+        }, "home-scan-recentes").start();
+    }
+
+    private void mostrarVazio() {
+        escaneando = false;
+        ultimaAtualizacao = System.currentTimeMillis();
+        containerRecentes.removeAllViews();
+        containerRecentes.setVisibility(View.GONE);
+        if (scrollRecentes != null) scrollRecentes.setVisibility(View.GONE);
+        vazioRecentes.setVisibility(View.VISIBLE);
     }
 
     // ==========================================================
-    //  Card de um projeto
+    //  Card do carrossel (mesmo estilo dos cards "Abrir"/"Clonar")
     // ==========================================================
 
-    private View criarCardProjetoRecente(File projeto) {
+    private View criarCardProjetoRecente(ItemRecente item, boolean ehUltimo) {
         LinearLayout card = new LinearLayout(contexto);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setOrientation(LinearLayout.VERTICAL);
         card.setBackgroundResource(R.drawable.bg_card);
         card.setClickable(true);
         card.setFocusable(true);
-        card.setPadding(dp(16), dp(14), dp(16), dp(14));
+        card.setPadding(dp(14), dp(14), dp(14), dp(14));
 
-        LinearLayout.LayoutParams lpCard = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        lpCard.setMargins(0, 0, 0, dp(8));
-        card.setLayoutParams(lpCard);
+        // Largura fixa no carrossel + margem entre cards
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                dp(LARGURA_CARD_DP),
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.rightMargin = ehUltimo ? 0 : dp(10);
+        card.setLayoutParams(lp);
 
-        // ---- Círculo com ícone ----
-        LinearLayout circuloIcone = new LinearLayout(contexto);
+        // ---------- Círculo com ícone ----------
+        LinearLayout circulo = new LinearLayout(contexto);
         LinearLayout.LayoutParams lpCirculo =
-                new LinearLayout.LayoutParams(dp(38), dp(38));
-        lpCirculo.setMargins(0, 0, dp(14), 0);
-        circuloIcone.setLayoutParams(lpCirculo);
-        circuloIcone.setGravity(Gravity.CENTER);
-        circuloIcone.setBackgroundResource(R.drawable.bg_icon_circle);
+                new LinearLayout.LayoutParams(dp(44), dp(44));
+        circulo.setLayoutParams(lpCirculo);
+        circulo.setGravity(Gravity.CENTER);
+        circulo.setBackgroundResource(R.drawable.bg_icon_circle);
 
         ImageView icone = new ImageView(contexto);
-        icone.setLayoutParams(new LinearLayout.LayoutParams(dp(20), dp(20)));
+        icone.setLayoutParams(new LinearLayout.LayoutParams(dp(22), dp(22)));
         icone.setImageResource(R.drawable.ic_pasta);
         icone.setColorFilter(Color.parseColor("#00E676"));
-        circuloIcone.addView(icone);
-        card.addView(circuloIcone);
+        circulo.addView(icone);
+        card.addView(circulo);
 
-        // ---- Coluna: nome + detalhes ----
-        LinearLayout coluna = new LinearLayout(contexto);
-        coluna.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams lpColuna = new LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        coluna.setLayoutParams(lpColuna);
-
+        // ---------- Nome do projeto ----------
         TextView nome = new TextView(contexto);
-        nome.setText(projeto.getName());
+        nome.setText(item.pasta.getName());
         nome.setTextColor(Color.parseColor("#F4F4F5"));
         nome.setTextSize(14);
         nome.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        coluna.addView(nome);
+        nome.setMaxLines(1);
+        nome.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams lpNome = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpNome.topMargin = dp(14);
+        nome.setLayoutParams(lpNome);
+        card.addView(nome);
 
+        // ---------- Descrição (v1.0.0 · 3 fontes) ----------
         TextView detalhe = new TextView(contexto);
-        detalhe.setText(descreverProjeto(projeto));
+        detalhe.setText(item.descricao);
         detalhe.setTextColor(Color.parseColor("#A1A1AA"));
         detalhe.setTextSize(11);
-        detalhe.setPadding(0, dp(3), 0, 0);
-        coluna.addView(detalhe);
+        detalhe.setMaxLines(2);
+        detalhe.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        detalhe.setLineSpacing(dp(1), 1f);
+        LinearLayout.LayoutParams lpDet = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpDet.topMargin = dp(4);
+        detalhe.setLayoutParams(lpDet);
+        card.addView(detalhe);
 
-        card.addView(coluna);
-
-        // ---- Tempo atrás ----
+        // ---------- Tempo atrás ----------
         TextView tempo = new TextView(contexto);
-        tempo.setText(tempoAtras(obterUltimaModificacao(projeto)));
+        tempo.setText(item.tempo);
         tempo.setTextColor(Color.parseColor("#6B7280"));
         tempo.setTextSize(10);
+        tempo.setTypeface(Typeface.MONOSPACE);
         LinearLayout.LayoutParams lpTempo = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        lpTempo.setMargins(dp(8), 0, dp(10), 0);
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpTempo.topMargin = dp(8);
         tempo.setLayoutParams(lpTempo);
         card.addView(tempo);
 
-        // ---- Seta ----
-        TextView seta = new TextView(contexto);
-        seta.setText("›");
-        seta.setTextColor(Color.parseColor("#A1A1AA"));
-        seta.setTextSize(20);
-        card.addView(seta);
-
-        // ---- Clique ----
+        // ---------- Clique ----------
         card.setOnClickListener(v -> {
-            if (acoes != null) acoes.aoCliqueProjetoRecente(projeto);
+            if (acoes != null) acoes.aoCliqueProjetoRecente(item.pasta);
         });
 
         return card;
     }
 
     // ==========================================================
-    //  Helpers de conteúdo
+    //  Helpers (I/O)
     // ==========================================================
 
-    /**
-     * Retorna a data mais recente de modificação dentro do projeto.
-     *
-     * Olha a pasta, os arquivos diretos e um nível dentro de cada
-     * subpasta (src/, include/, lib/, deps/). Ignora arquivos ocultos.
-     */
     private long obterUltimaModificacao(File pasta) {
         long max = pasta.lastModified();
         File[] filhos = pasta.listFiles();
@@ -286,7 +325,6 @@ public class MontadorDeHome {
         return max;
     }
 
-    /** Formata timestamp como "agora", "5min", "2h", "3d" ou "dd/MM". */
     private String tempoAtras(long millis) {
         if (millis <= 0) return "";
 
@@ -300,7 +338,6 @@ public class MontadorDeHome {
                 .format(new Date(millis));
     }
 
-    /** Descrição curta: "v1.0.0 · arm64-v8a, armeabi-v7a · 3 fontes". */
     private String descreverProjeto(File pasta) {
         StringBuilder sb = new StringBuilder();
 
@@ -311,16 +348,12 @@ public class MontadorDeHome {
                 if (p.versao != null && !p.versao.isEmpty()) {
                     sb.append("v").append(p.versao);
                 }
-                if (p.abis != null && !p.abis.isEmpty()) {
-                    if (sb.length() > 0) sb.append("  ·  ");
-                    sb.append(String.join(", ", p.abis));
-                }
             } catch (Exception ignored) { }
         }
 
         int fontes = contarFontes(pasta);
         if (fontes > 0) {
-            if (sb.length() > 0) sb.append("  ·  ");
+            if (sb.length() > 0) sb.append(" · ");
             sb.append(fontes).append(fontes != 1 ? " fontes" : " fonte");
         }
 
