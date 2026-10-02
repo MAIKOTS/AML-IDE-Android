@@ -1,12 +1,11 @@
-# AML_IDE
-
-IDE Android para desenvolvimento em **C/C++** direto no celular, com toolchain
-**Clang/LLVM** embutido e sistema de recursos remoto.
-
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Android-green.svg)
 ![Language](https://img.shields.io/badge/language-Java-orange.svg)
 ![Build](https://github.com/MAIKOTS/AML-IDE-android/actions/workflows/build.yml/badge.svg)
+
+# AML_IDE
+IDE Android para desenvolvimento em **C/C++** direto no celular, com toolchain
+**Clang/LLVM** embutido e sistema de recursos remoto.
 ---
 
 ## ✨ Recursos
