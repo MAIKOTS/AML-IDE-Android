@@ -188,11 +188,9 @@ para mais detalhes.
 
 ---
 
-👤 Autor
+👤 Autor: [@MAIKOTS](https://github.com/MAIKOTS)
 
-MAIKOTS
-
-· [GitHub](@MAIKOTS)
+· [GitHub](https://github.com/MAIKOTS)
 · [repositório](github.com/MAIKOTS/AML-IDE-Android)
 
 ---
